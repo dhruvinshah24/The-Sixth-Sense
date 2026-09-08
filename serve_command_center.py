@@ -64,6 +64,7 @@ def _run_live_test(run_id: str, run_dir: Path, video_path: Path) -> None:
         "--gps", str(PROJECT_ROOT / "data" / "demo_gps.csv"),
         "--output", str(run_dir),
         "--profile", "road_damage_sensitive",
+        "--process-all",
         "--bus-id", "USER_UPLOAD",
         "--camera-id", "USER_CAMERA",
     ]
