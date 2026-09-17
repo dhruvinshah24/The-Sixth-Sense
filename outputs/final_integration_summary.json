@@ -1,0 +1,67 @@
+{
+  "timestamp": 1789682607.9021916,
+  "project": "The Sixth Sense \u2014 Mobile Urban Intelligence Platform",
+  "sih_problem_statements": [
+    "PS 26124",
+    "PS 26125"
+  ],
+  "integration_status": "COMPLETE_AND_VERIFIED",
+  "workstreams_integrated": [
+    {
+      "person": 1,
+      "domain": "ROAD_INFRASTRUCTURE",
+      "status": "IMPLEMENTED + VALIDATED"
+    },
+    {
+      "person": 2,
+      "domain": "TRAFFIC_MOBILITY",
+      "status": "IMPLEMENTED + VALIDATED"
+    },
+    {
+      "person": 3,
+      "domain": "SAFETY_VRU",
+      "status": "IMPLEMENTED + VALIDATED"
+    },
+    {
+      "person": 4,
+      "domain": "INCIDENT_ENFORCEMENT",
+      "status": "IMPLEMENTED + VALIDATED"
+    },
+    {
+      "person": 5,
+      "domain": "PLATFORM_AUDIT_TELEMETRY",
+      "status": "IMPLEMENTED + VALIDATED"
+    },
+    {
+      "person": 6,
+      "domain": "COMMAND_CENTER_GIS",
+      "status": "IMPLEMENTED + VALIDATED"
+    }
+  ],
+  "corridor": "SEG_MUMBAI_SV_ROAD",
+  "metrics": {
+    "total_raw_observations": 2,
+    "total_persistent_issues": 1,
+    "multi_bus_corroborated_issues": 1,
+    "cross_domain_synergy": "INCIDENT_CONGESTION_COMPOUND",
+    "urgency_multiplier": 2.0,
+    "pre_repair_health_score": 66.6,
+    "post_repair_health_score": 83.2,
+    "priority_score": 68.3,
+    "priority_band": "HIGH",
+    "governance_decision": "ACTIONABLE_WORK_ORDER",
+    "verification_result": "VERIFIED_REPAIRED",
+    "artifacts_exported": 8
+  },
+  "artifacts": {
+    "observations": "C:\\Users\\dhruv\\AppData\\Local\\Temp\\pytest-of-dhruv\\pytest-107\\test_end_to_end_full_team_inte0\\test_urban_intel\\observations.json",
+    "persistent_issues": "C:\\Users\\dhruv\\AppData\\Local\\Temp\\pytest-of-dhruv\\pytest-107\\test_end_to_end_full_team_inte0\\test_urban_intel\\persistent_issues.json",
+    "road_health": "C:\\Users\\dhruv\\AppData\\Local\\Temp\\pytest-of-dhruv\\pytest-107\\test_end_to_end_full_team_inte0\\test_urban_intel\\road_health.json",
+    "traffic_state": "C:\\Users\\dhruv\\AppData\\Local\\Temp\\pytest-of-dhruv\\pytest-107\\test_end_to_end_full_team_inte0\\test_urban_intel\\traffic_state.json",
+    "fused_context": "C:\\Users\\dhruv\\AppData\\Local\\Temp\\pytest-of-dhruv\\pytest-107\\test_end_to_end_full_team_inte0\\test_urban_intel\\fused_context.json",
+    "priority_queue": "C:\\Users\\dhruv\\AppData\\Local\\Temp\\pytest-of-dhruv\\pytest-107\\test_end_to_end_full_team_inte0\\test_urban_intel\\priority_queue.json",
+    "governance_decisions": "C:\\Users\\dhruv\\AppData\\Local\\Temp\\pytest-of-dhruv\\pytest-107\\test_end_to_end_full_team_inte0\\test_urban_intel\\governance_decisions.json",
+    "final_summary": "C:\\Users\\dhruv\\AppData\\Local\\Temp\\pytest-of-dhruv\\pytest-107\\test_end_to_end_full_team_inte0\\test_urban_intel\\final_summary.json"
+  },
+  "command_center_endpoint": "/urban-intelligence/"
+}

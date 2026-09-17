@@ -25,6 +25,7 @@ UI_ROOT = PROJECT_ROOT / "command_center"
 DATA_ROOT = PROJECT_ROOT / "outputs" / "sih_demo"
 TRAFFIC_DATA_ROOT = PROJECT_ROOT / "outputs" / "traffic_demo"
 LIVE_RUNS_ROOT = PROJECT_ROOT / "outputs" / "live_runs"
+URBAN_INTEL_ROOT = PROJECT_ROOT / "outputs" / "urban_intelligence"
 HOST = "127.0.0.1"
 PORT = 8765
 MAX_UPLOAD_BYTES = 1_000 * 1024 * 1024  # 1 GB, local-only video test limit.
@@ -158,6 +159,12 @@ class CommandCenterHandler(SimpleHTTPRequestHandler):
             rel = path[len("/traffic-data/") :].lstrip("/")
             target = (TRAFFIC_DATA_ROOT / rel).resolve()
             if not str(target).startswith(str(TRAFFIC_DATA_ROOT.resolve())):
+                return str(UI_ROOT / "404.html")
+            return str(target)
+        if path.startswith("/urban-intelligence/"):
+            rel = path[len("/urban-intelligence/") :].lstrip("/")
+            target = (URBAN_INTEL_ROOT / rel).resolve()
+            if not str(target).startswith(str(URBAN_INTEL_ROOT.resolve())):
                 return str(UI_ROOT / "404.html")
             return str(target)
         if path.startswith("/live-runs/"):

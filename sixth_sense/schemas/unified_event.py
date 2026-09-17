@@ -126,3 +126,86 @@ class UnifiedObservation:
             provenance=prov,
             privacy_status=obs.privacy_status,
         )
+
+
+def create_safety_observation(
+    bus_id: str,
+    timestamp: float,
+    lat: float,
+    lon: float,
+    event_type: str = "PEDESTRIAN",
+    confidence: float = 0.85,
+    severity: str = "HIGH",
+    road_segment_id: Optional[str] = None,
+    evidence: Optional[Dict[str, Any]] = None,
+    provenance: Optional[Dict[str, Any]] = None,
+    obs_id: Optional[str] = None,
+) -> UnifiedObservation:
+    """
+    Standard factory for Person 3 (Vulnerable Road User / Safety) observations.
+    Bridges pedestrian/cyclist detections into the Unified Intelligence pipeline.
+    """
+    return UnifiedObservation(
+        observation_id=obs_id or UnifiedObservation.make_id(),
+        bus_id=bus_id,
+        timestamp=timestamp,
+        location={
+            "lat": lat,
+            "lon": lon,
+            "road_segment_id": road_segment_id,
+            "status": "VALID",
+        },
+        domain=DomainType.SAFETY,
+        event_type=event_type,
+        confidence=confidence,
+        severity=severity,
+        evidence=evidence or {"vru_type": event_type, "corridor": road_segment_id},
+        provenance=provenance or {"source": "PERSON_3_SAFETY_MODULE", "model": "yolov8_vru_detector"},
+        privacy_status="ANONYMIZED",
+    )
+
+
+def create_incident_observation(
+    bus_id: str,
+    timestamp: float,
+    lat: float,
+    lon: float,
+    event_type: str = "INCIDENT_CANDIDATE",
+    confidence: float = 0.88,
+    severity: str = "CRITICAL",
+    road_segment_id: Optional[str] = None,
+    evidence: Optional[Dict[str, Any]] = None,
+    provenance: Optional[Dict[str, Any]] = None,
+    obs_id: Optional[str] = None,
+) -> UnifiedObservation:
+    """
+    Standard factory for Person 4 (Incident & Enforcement) candidate observations.
+    Bridges collisions, breakdowns, and blockages with mandatory human review provenance.
+    """
+    return UnifiedObservation(
+        observation_id=obs_id or UnifiedObservation.make_id(),
+        bus_id=bus_id,
+        timestamp=timestamp,
+        location={
+            "lat": lat,
+            "lon": lon,
+            "road_segment_id": road_segment_id,
+            "status": "VALID",
+        },
+        domain=DomainType.INCIDENT,
+        event_type=event_type,
+        confidence=confidence,
+        severity=severity,
+        evidence=evidence or {
+            "incident_type": event_type,
+            "requires_human_review": True,
+            "corridor": road_segment_id,
+        },
+        provenance=provenance or {
+            "source": "PERSON_4_INCIDENT_MODULE",
+            "model": "incident_detector_v1",
+            "enforcement_safeguard": "MANDATORY_OFFICER_REVIEW",
+        },
+        privacy_status="ANONYMIZED",
+    )
+
