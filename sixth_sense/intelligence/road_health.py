@@ -140,23 +140,29 @@ class RoadHealthEngine:
         current_score = self.base_score
         total_deduction = 0.0
 
-        # Aggregate unique buses and defect types
+        # Aggregate unique buses and defect breakdown cleanly without double-counting
         buses = set()
         defect_counts: Dict[str, int] = {}
-        for obs in observations:
-            buses.add(obs.bus_id)
-            cls_k = obs.class_name or (obs.event_type.value if hasattr(obs.event_type, "value") else str(obs.event_type))
-            defect_counts[cls_k] = defect_counts.get(cls_k, 0) + 1
 
         active_issues = persistent_issues or []
-        for issue in active_issues:
-            for b in issue.bus_ids:
-                buses.add(b)
-            cls_k = issue.class_name or (issue.event_type.value if hasattr(issue.event_type, "value") else str(issue.event_type))
-            defect_counts[cls_k] = defect_counts.get(cls_k, 0) + issue.observation_count
+        if active_issues:
+            # Evaluate deduplicated physical issues directly
+            for issue in active_issues:
+                for b in issue.bus_ids:
+                    buses.add(b)
+                cls_k = issue.class_name or (issue.event_type.value if hasattr(issue.event_type, "value") else str(issue.event_type))
+                defect_counts[cls_k] = defect_counts.get(cls_k, 0) + 1
+            obs_count = sum(i.observation_count for i in active_issues)
+            for obs in observations:
+                buses.add(obs.bus_id)
+        else:
+            for obs in observations:
+                buses.add(obs.bus_id)
+                cls_k = obs.class_name or (obs.event_type.value if hasattr(obs.event_type, "value") else str(obs.event_type))
+                defect_counts[cls_k] = defect_counts.get(cls_k, 0) + 1
+            obs_count = len(observations)
 
         bus_count = len(buses)
-        obs_count = len(observations) + sum(i.observation_count for i in active_issues)
 
         # ── 1. Defect Severity Deductions ───────────────────────────────── #
         defect_deductions = 0.0
@@ -209,8 +215,8 @@ class RoadHealthEngine:
             factors["safety_risk_penalty"] = safety_penalty
             reasons.append(f"Safety risk exposure / nearby VRU conflict (-{safety_penalty:.1f}pts)")
 
-        # Compute final health score
-        health_score = max(0.0, round(self.base_score - total_deduction, 1))
+        # Compute final health score (strictly clamped 0.0 - 100.0)
+        health_score = max(0.0, min(100.0, round(self.base_score - total_deduction, 1)))
         factors["total_deductions"] = round(total_deduction, 1)
 
         # ── 5. Health State Classification ──────────────────────────────── #
@@ -253,8 +259,13 @@ class RoadHealthEngine:
         """
         Derive empirical trend strictly from available observation history.
         Never fabricates historical baselines.
+        Single observation or single bus pass ALWAYS returns INSUFFICIENT_HISTORY.
         """
-        total_evidence = len(observations) + sum(i.observation_count for i in issues)
+        total_evidence = (
+            sum(i.observation_count for i in issues)
+            if issues
+            else len(observations)
+        )
         if total_evidence < 2 or bus_count < 2:
             return RoadTrend.INSUFFICIENT_HISTORY
 
@@ -265,7 +276,7 @@ class RoadHealthEngine:
                 return RoadTrend.WORSENING
             if all(t in ("IMPROVING", "RESOLVED") for t in trends):
                 return RoadTrend.IMPROVING
-            if any(t == "PERSISTENT" for t in trends) or len(issues) >= 2:
+            if any(t in ("PERSISTENT", "STABLE") for t in trends) or len(issues) >= 1:
                 return RoadTrend.PERSISTENT
             return RoadTrend.STABLE
 
@@ -297,7 +308,7 @@ def apply_closure_to_road_health(
         mult = _DEFECT_WEIGHTS.get(getattr(issue, "event_type", EventType.ROAD_DAMAGE), 1.0)
         recovered_pts = round(base_ded * mult * 0.85, 1)
 
-        updated_score = min(100.0, round(updated_score + recovered_pts, 1))
+        updated_score = max(0.0, min(100.0, round(updated_score + recovered_pts, 1)))
         updated_trend = RoadTrend.IMPROVING
         active_count = max(0, active_count - 1)
         updated_factors["closure_recovery_bonus"] = recovered_pts
@@ -305,7 +316,7 @@ def apply_closure_to_road_health(
 
     elif res_str in ("REOPENED", "STILL_PRESENT"):
         penalty = 10.0
-        updated_score = max(0.0, round(updated_score - penalty, 1))
+        updated_score = max(0.0, min(100.0, round(updated_score - penalty, 1)))
         updated_trend = RoadTrend.WORSENING
         updated_factors["closure_failure_penalty"] = penalty
         updated_reasons.append(f"Issue {issue.issue_id} reopened/failed verification: -{penalty}pts recurrence penalty.")

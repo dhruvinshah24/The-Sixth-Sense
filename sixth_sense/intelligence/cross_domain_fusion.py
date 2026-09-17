@@ -52,7 +52,27 @@ class FusedSegmentContext:
 class CrossDomainFusionEngine:
     """
     Fuses multi-modal observations along common spatial segments.
+
+    NOTE ON METHODOLOGY:
+    These synergy rules are deterministic engineering heuristics (RULE-BASED FUSION)
+    designed to assist municipal agencies in prioritizing compound urban stress.
+    They are NOT claimed as empirically proven causal relationships.
+    All multipliers are configurable and priority impacts are strictly bounded.
     """
+
+    def __init__(
+        self,
+        heavy_traffic_defect_multiplier: float = 0.40,
+        safety_pedestrian_multiplier: float = 0.35,
+        waterlogging_traffic_multiplier: float = 0.30,
+        incident_blockage_multiplier: float = 0.45,
+        max_multiplier: float = 2.0,
+    ) -> None:
+        self.heavy_traffic_defect_multiplier = heavy_traffic_defect_multiplier
+        self.safety_pedestrian_multiplier = safety_pedestrian_multiplier
+        self.waterlogging_traffic_multiplier = waterlogging_traffic_multiplier
+        self.incident_blockage_multiplier = incident_blockage_multiplier
+        self.max_multiplier = max_multiplier
 
     def fuse_segment_events(
         self,
@@ -89,7 +109,7 @@ class CrossDomainFusionEngine:
         t_min = min(timestamps) if timestamps else 0.0
         t_max = max(timestamps) if timestamps else 0.0
 
-        # Cross-Domain Rules & Compound Multipliers
+        # Cross-Domain Rules & Compound Multipliers (Rule-Based Engineering Heuristics)
         has_critical_road_defect = any(
             r.get("severity") in ("CRITICAL", "HIGH") or "POTHOLE" in r.get("event_type", "").upper()
             for r in road_obs
@@ -100,21 +120,22 @@ class CrossDomainFusionEngine:
         )
         has_waterlogging = any("WATERLOGGING" in r.get("event_type", "").upper() for r in road_obs)
         has_pedestrian_exposure = len(safety_obs) > 0 or any("PEDESTRIAN" in str(r.get("event_type", "")).upper() for r in road_obs)
+        has_incident = len(incident_obs) > 0
 
         synergy = "STANDARD_MONITORING"
 
         # Synergy 1: Critical Road Defect + Heavy Traffic
         if has_critical_road_defect and is_heavy_traffic:
-            multiplier += 0.40
+            multiplier += self.heavy_traffic_defect_multiplier
             synergy = "COMPOUND_INFRASTRUCTURE_TRAFFIC_STRESS"
             synthesis.append(
                 "Compound Risk: Critical road defect in congested transit corridor; "
                 "causes vehicle slowdowns, rapid pothole expansion, and high repair urgency."
             )
 
-        # Synergy 2: Road Defect / Waterlogging + Pedestrian / Safety Risk
+        # Synergy 2: Road Defect / Waterlogging + Pedestrian / Safety Risk (Future Person 3)
         if (has_critical_road_defect or has_waterlogging) and has_pedestrian_exposure:
-            multiplier += 0.35
+            multiplier += self.safety_pedestrian_multiplier
             synergy = "SAFETY_CRITICAL_CORRIDOR"
             synthesis.append(
                 "Safety Alert: Surface defect/waterlogging in pedestrian zone creates "
@@ -123,13 +144,21 @@ class CrossDomainFusionEngine:
 
         # Synergy 3: Waterlogging + Traffic Bottleneck
         if has_waterlogging and is_heavy_traffic:
-            multiplier += 0.30
+            multiplier += self.waterlogging_traffic_multiplier
             synthesis.append(
                 "Drainage/Flow Interaction: Standing water accumulation reducing carriageway capacity, "
                 "causing localized bottlenecks."
             )
 
-        # Standalone observations
+        # Synergy 4: Incident Blockage + Congestion (Future Person 4)
+        if has_incident and (is_heavy_traffic or has_critical_road_defect):
+            multiplier += self.incident_blockage_multiplier
+            synergy = "INCIDENT_CONGESTION_COMPOUND"
+            synthesis.append(
+                "Incident Impact: Traffic obstruction or collision candidate compounding corridor delay."
+            )
+
+        # Standalone observations fallback
         if not synthesis:
             if road_obs:
                 synthesis.append(f"{len(road_obs)} road infrastructure observations recorded.")

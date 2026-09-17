@@ -152,7 +152,7 @@ class ConfidenceAutomationGovernor:
                 governance_action=GovernanceAction.DISPATCHABLE_TASK,
                 auto_dispatch_permitted=True,
                 requires_human_signoff=False,
-                rationale=f"High confidence ({conf:.2f}) verified across {b_count} independent bus passes; fully actionable for municipal dispatch.",
+                rationale=f"High confidence ({conf:.2f}) corroborated across {b_count} multiple bus passes; eligible for automated municipal workflow creation (draft work order).",
             )
         else:
             return AutomationDecision(
@@ -164,5 +164,5 @@ class ConfidenceAutomationGovernor:
                 governance_action=GovernanceAction.INTERNAL_MONITORING,
                 auto_dispatch_permitted=False,
                 requires_human_signoff=False,
-                rationale=f"High confidence ({conf:.2f}) observed on single bus pass; awaiting fleet corroboration pass before auto-dispatch.",
+                rationale=f"High confidence ({conf:.2f}) observed on single bus pass; awaiting multi-bus corroboration pass before automated workflow creation.",
             )

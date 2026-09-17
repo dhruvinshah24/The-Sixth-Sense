@@ -1,8 +1,9 @@
-﻿"""
+"""
 Comprehensive Unit & Integration Tests for Urban Intelligence Layer
 The Sixth Sense — SIH 2026 PS 26124 / PS 26125
 Person 1 (Road Infrastructure) + Person 2 (Traffic Mobility) Intelligence.
 """
+import os
 import pytest
 from typing import Optional
 
@@ -455,9 +456,169 @@ def test_confidence_automation_governor_tiers():
     d4 = gov.evaluate_issue(base_issue)
     assert d4.tier == AutomationTier.ACTIONABLE_WORK_ORDER
     assert d4.auto_dispatch_permitted is True
-
     # 5. High consequence override -> mandatory human sign-off regardless of confidence/buses
     d5 = gov.evaluate_issue(base_issue, is_high_consequence=True)
     assert d5.requires_human_signoff is True
     assert d5.auto_dispatch_permitted is False
     assert d5.governance_action == GovernanceAction.HUMAN_APPROVAL_REQUIRED
+
+
+# -------------------------------------------------------------------------- #
+# 9. Hardening Regression Tests: Road Health Bounds & Strict Trend Rules
+# -------------------------------------------------------------------------- #
+
+def test_road_health_bounds_and_single_obs_trend():
+    """Verify that score never drops below 0 even with overwhelming defects, and trend is strict."""
+    engine = RoadHealthEngine()
+
+    # 10 critical potholes
+    critical_obs = [
+        _create_test_obs(f"obs_crit_{i}", bus_id="BUS_1", event_type=EventType.POTHOLE, severity=SeverityTier.CRITICAL, confidence=0.99)
+        for i in range(10)
+    ]
+    res = engine.evaluate_segment("SEG_DISASTER", observations=critical_obs, traffic_congestion_state="CONGESTION", safety_incident_count=5)
+    # Must be clamped at 0.0, never negative
+    assert res.health_score >= 0.0
+    assert res.health_score <= 100.0
+    assert res.health_state == RoadHealthState.CRITICAL
+    # Single bus pass MUST report INSUFFICIENT_HISTORY, not WORSENING
+    assert res.trend == RoadTrend.INSUFFICIENT_HISTORY
+
+
+# -------------------------------------------------------------------------- #
+# 10. Hardening Regression Tests: City Memory Defect Separation & Lifecycle
+# -------------------------------------------------------------------------- #
+
+def test_city_memory_separation_rules():
+    """Verify different defect types or defects beyond 30m remain distinct issues."""
+    memory = CityMemory(dedup_radius_m=30.0)
+
+    # Defect 1: Pothole at lat: 19.0760, lon: 72.8777
+    obs_pothole = _create_test_obs("obs_p1", bus_id="BUS_1", event_type=EventType.POTHOLE, class_name="D40", lat=19.0760, lon=72.8777)
+
+    # Defect 2: Crack at SAME location
+    obs_crack = _create_test_obs("obs_c1", bus_id="BUS_1", event_type=EventType.ROAD_CRACK, class_name="D00", lat=19.0760, lon=72.8777)
+
+    # Defect 3: Another Pothole 60m away (lat +0.0006 degrees ~ 66 meters)
+    obs_far_pothole = _create_test_obs("obs_p2", bus_id="BUS_1", event_type=EventType.POTHOLE, class_name="D40", lat=19.0766, lon=72.8777)
+
+    iss1 = memory.ingest_observation(obs_pothole)
+    iss2 = memory.ingest_observation(obs_crack)
+    iss3 = memory.ingest_observation(obs_far_pothole)
+
+    # Must produce 3 distinct PersistentIssues
+    all_issues = memory.get_all_issues()
+    assert len(all_issues) == 3
+    assert len({iss1.issue_id, iss2.issue_id, iss3.issue_id}) == 3
+
+    # Reopened issue test: set iss1 status to REOPENED and ingest new observation
+    iss1.status = "REOPENED"
+    obs_pothole_reopen = _create_test_obs("obs_p1_re", bus_id="BUS_2", event_type=EventType.POTHOLE, class_name="D40", lat=19.07601, lon=72.87771)
+    iss_reopened_updated = memory.ingest_observation(obs_pothole_reopen)
+
+    assert iss_reopened_updated.issue_id == iss1.issue_id
+    assert iss_reopened_updated.bus_count == 2
+    assert len(memory.get_all_issues()) == 3  # No duplicate created
+
+
+# -------------------------------------------------------------------------- #
+# 11. Hardening Regression Tests: Cross-Domain Fusion Teammate Ingestion
+# -------------------------------------------------------------------------- #
+
+def test_cross_domain_fusion_teammate_safety_and_incident():
+    """Verify extensible ingestion for future Person 3 (Safety) and Person 4 (Incident)."""
+    fusion = CrossDomainFusionEngine(
+        safety_pedestrian_multiplier=0.40,
+        incident_blockage_multiplier=0.50,
+    )
+
+    safety_ev = UnifiedObservation(
+        observation_id="safe_01",
+        bus_id="BUS_3",
+        timestamp=200.0,
+        location={"lat": 19.0, "lon": 72.8, "road_segment_id": "SEG_CORRIDOR"},
+        domain=DomainType.SAFETY,
+        event_type="PEDESTRIAN",
+        confidence=0.89,
+        severity="HIGH",
+    )
+
+    incident_ev = UnifiedObservation(
+        observation_id="inc_01",
+        bus_id="BUS_3",
+        timestamp=205.0,
+        location={"lat": 19.0, "lon": 72.8, "road_segment_id": "SEG_CORRIDOR"},
+        domain=DomainType.INCIDENT,
+        event_type="VEHICLE_COLLISION_CANDIDATE",
+        confidence=0.91,
+        severity="CRITICAL",
+    )
+
+    fused = fusion.fuse_segment_events(
+        segment_id="SEG_CORRIDOR",
+        unified_events=[safety_ev, incident_ev],
+        traffic_exposure=0.85,
+        traffic_congestion_state="CONGESTION",
+    )
+
+    assert fused.urgency_multiplier > 1.30
+    assert len(fused.safety_risks) == 1
+    assert len(fused.incidents) == 1
+    assert any("Incident" in s for s in fused.explainable_synthesis)
+
+
+# -------------------------------------------------------------------------- #
+# 12. End-to-End Orchestration Pipeline Tests
+# -------------------------------------------------------------------------- #
+
+def test_urban_intelligence_pipeline_e2e(tmp_path):
+    """Verify complete end-to-end UrbanIntelligencePipeline execution and artifact generation."""
+    from sixth_sense.pipeline import UrbanIntelligencePipeline
+    from sixth_sense.closure.repair_claim import RepairClaimBuilder
+    from sixth_sense.closure.verification_engine import FollowUpPass
+
+    pipeline = UrbanIntelligencePipeline(dedup_radius_m=30.0)
+
+    # Ingest bus 1 pothole
+    obs1 = _create_test_obs("obs_p1", bus_id="BUS_10", event_type=EventType.POTHOLE, class_name="D40", confidence=0.85)
+    iss1 = pipeline.ingest_observation(obs1, road_segment_id="SEG_TEST_E2E")
+
+    # Ingest bus 2 pothole (same location)
+    obs2 = _create_test_obs("obs_p2", bus_id="BUS_20", event_type=EventType.POTHOLE, class_name="D40", confidence=0.90)
+    pipeline.ingest_observation(obs2, road_segment_id="SEG_TEST_E2E")
+
+    # Ingest traffic vehicles
+    traffic_recs = [
+        {"obs_id": f"v_{i}", "event_type": "VEHICLE", "class_name": "car", "first_seen_ts": 10.0 + i}
+        for i in range(15)
+    ]
+    pipeline.ingest_traffic_records(traffic_recs, road_segment_id="SEG_TEST_E2E")
+
+    # Process all intelligence
+    summary = pipeline.process_all()
+    assert summary["total_raw_observations"] == 2
+    assert summary["total_persistent_issues"] == 1
+    assert summary["multi_bus_corroborated_issues"] == 1
+    assert "SEG_TEST_E2E" in summary["road_health_overview"]
+    assert "SEG_TEST_E2E" in summary["traffic_state_overview"]
+
+    # Test Proof-of-closure loop
+    claim = RepairClaimBuilder.build(iss1.issue_id, "WO_01", "PWD_Contractor")
+    follow_up = FollowUpPass(
+        bus_id="BUS_30",
+        pass_timestamp=500.0,
+        pass_gps=_make_gps(19.0760, 72.8777),
+        observations=[],
+        data_provenance="SIMULATED_SCENARIO",
+    )
+    v_res, updated_health = pipeline.verify_repair(iss1.issue_id, claim, follow_up)
+    assert v_res.verification_result == "VERIFIED_REPAIRED"
+    assert updated_health is not None
+    assert updated_health.trend == RoadTrend.IMPROVING
+
+    # Test export artifacts
+    out_dir = str(tmp_path / "urban_intel_export")
+    paths = pipeline.export_artifacts(out_dir)
+    assert len(paths) == 8
+    for p in paths.values():
+        assert os.path.exists(p)
