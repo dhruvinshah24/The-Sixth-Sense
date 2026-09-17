@@ -12,6 +12,11 @@ from sixth_sense.traffic.intelligence import (
     detect_persistent_bottlenecks,
     build_od_patterns,
 )
+from sixth_sense.traffic.traffic_state_engine import (
+    TrafficStateEngine,
+    SegmentTrafficState,
+    CongestionClassification,
+)
 
 __all__ = [
     "SUPPORTED_VEHICLE_CLASSES",
@@ -24,4 +29,7 @@ __all__ = [
     "analyze_route_delays",
     "detect_persistent_bottlenecks",
     "build_od_patterns",
+    "TrafficStateEngine",
+    "SegmentTrafficState",
+    "CongestionClassification",
 ]
