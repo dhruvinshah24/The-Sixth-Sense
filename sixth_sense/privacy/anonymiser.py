@@ -72,8 +72,8 @@ class Anonymiser:
                 # Blur top fraction of person bbox (face region estimate)
                 face_y2 = int(y1 + (y2 - y1) * self.face_fraction)
                 face_y2 = min(face_y2, h)
-                rx1, ry1 = max(0, x1), max(0, y1)
-                rx2, ry2 = min(w, x2), face_y2
+                rx1, ry1 = int(max(0, x1)), int(max(0, y1))
+                rx2, ry2 = int(min(w, x2)), int(face_y2)
                 if rx2 > rx1 and ry2 > ry1:
                     roi = result[ry1:ry2, rx1:rx2]
                     blurred = cv2.GaussianBlur(roi, self.blur_k, 0)
@@ -81,8 +81,8 @@ class Anonymiser:
 
             elif self.blur_plates and det.class_name in _PLATE_BLUR_CLASSES:
                 # Full bbox blur for plate regions (Phase F)
-                rx1, ry1 = max(0, x1), max(0, y1)
-                rx2, ry2 = min(w, x2), min(h, y2)
+                rx1, ry1 = int(max(0, x1)), int(max(0, y1))
+                rx2, ry2 = int(min(w, x2)), int(min(h, y2))
                 if rx2 > rx1 and ry2 > ry1:
                     roi = result[ry1:ry2, rx1:rx2]
                     blurred = cv2.GaussianBlur(roi, self.blur_k, 0)

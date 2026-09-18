@@ -1,0 +1,51 @@
+{
+  "audit_metadata": {
+    "project": "The Sixth Sense (SIH 2026 PS 26124 / PS 26125)",
+    "timestamp_iso": "2026-09-18T21:38:00+05:30",
+    "audit_phase": "FINAL_REAL_WORLD_ROBUSTNESS_ADVERSARIAL_PASS",
+    "test_count_total": 185,
+    "test_count_passed": 185,
+    "test_count_failed": 0
+  },
+  "bugs_found_and_fixed": [
+    {
+      "file": "sixth_sense/privacy/anonymiser.py",
+      "bug": "Float bounding box slicing caused TypeError: slice indices must be integers or None or have an __index__ method on numpy frame slicing",
+      "fix": "Explicitly cast slice boundaries to int: rx1, ry1 = int(max(0, x1)), int(max(0, y1)); rx2, ry2 = int(min(w, x2)), int(min(h, y2))",
+      "test": "tests/test_adversarial_suite.py::test_privacy_anonymisation"
+    }
+  ],
+  "road_damage_adversarial": {
+    "conditions_tested": 16,
+    "report_file": "docs/ROAD_DAMAGE_ADVERSARIAL_VALIDATION.md",
+    "real_video_sources": [
+      "test_road.mp4",
+      "test_road1.mp4",
+      "RDD2022 India stills"
+    ],
+    "context_gate_verdict": "Current temporal + spatial safeguards retained; no additional context gate justified by available evidence."
+  },
+  "tracking_and_traffic_counting": {
+    "tracker_type": "UrbianTracker (IoU matching with class constraint & confirmation frames; not ByteTrack/SORT)",
+    "track_count": "Active confirmed Track objects surviving confirm_frames=2",
+    "observation_count": "Confirmed, temporally grouped observations across frames with IoU overlap",
+    "unique_vehicle_count": "Line-crossing count using persistent counted_track_ids set (zero double counting within FOV pass)",
+    "idempotence_verified": true
+  },
+  "edge_performance_benchmark": {
+    "device": "NVIDIA GeForce RTX 5050 Laptop GPU (CUDA 13.2, PyTorch 2.6.0+cu132)",
+    "raw_model_latency_1080p_ms": 31.83,
+    "raw_model_latency_848p_ms": 30.8,
+    "tracker_latency_ms": 0.0048,
+    "observation_builder_latency_ms": 0.0017,
+    "intelligence_layer_latency_ms": 0.0058,
+    "gpu_memory_allocated_mb": 80.3,
+    "gpu_memory_reserved_mb": 136.0,
+    "pipeline_effective_fps": "3.1 to 8.5 FPS (Dashcam target: 3.0 FPS)"
+  },
+  "model_freeze_status": {
+    "model_changed": false,
+    "model_retrained": false,
+    "final_recommendation": "FREEZE"
+  }
+}
