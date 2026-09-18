@@ -85,7 +85,49 @@ class GPSAssociator:
 
         target_unix = self.video_start_unix + video_timestamp_sec
 
-        # Binary search: find bracketing samples
+        # 1. Out-of-bounds check: before first sample
+        first_s = self._samples[0]
+        if target_unix < first_s["timestamp"]:
+            gap = first_s["timestamp"] - target_unix
+            if gap > self.max_gap:
+                return GPSPoint(
+                    lat=0.0, lon=0.0,
+                    timestamp=target_unix, uncertainty_m=9999.0,
+                    heading=None, status=GPSStatus.UNAVAILABLE,
+                )
+            direct = gap < 1.0
+            unc = self.base_uncertainty if direct else round(self.base_uncertainty + gap * self.speed_factor, 2)
+            return GPSPoint(
+                lat=round(first_s["lat"], 7),
+                lon=round(first_s["lon"], 7),
+                timestamp=round(target_unix, 3),
+                uncertainty_m=unc,
+                heading=first_s.get("heading"),
+                status=GPSStatus.DIRECT if direct else GPSStatus.INTERPOLATED,
+            )
+
+        # 2. Out-of-bounds check: after last sample
+        last_s = self._samples[-1]
+        if target_unix > last_s["timestamp"]:
+            gap = target_unix - last_s["timestamp"]
+            if gap > self.max_gap:
+                return GPSPoint(
+                    lat=0.0, lon=0.0,
+                    timestamp=target_unix, uncertainty_m=9999.0,
+                    heading=None, status=GPSStatus.UNAVAILABLE,
+                )
+            direct = gap < 1.0
+            unc = self.base_uncertainty if direct else round(self.base_uncertainty + gap * self.speed_factor, 2)
+            return GPSPoint(
+                lat=round(last_s["lat"], 7),
+                lon=round(last_s["lon"], 7),
+                timestamp=round(target_unix, 3),
+                uncertainty_m=unc,
+                heading=last_s.get("heading"),
+                status=GPSStatus.DIRECT if direct else GPSStatus.INTERPOLATED,
+            )
+
+        # 3. Binary search: find bracketing samples within valid range
         lo, hi = 0, len(self._samples) - 1
         while lo < hi:
             mid = (lo + hi) // 2
