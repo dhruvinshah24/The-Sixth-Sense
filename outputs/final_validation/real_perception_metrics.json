@@ -1,0 +1,74 @@
+{
+  "audit_date": "2026-09-18",
+  "model_checkpoint": "models/yolo12s_RDD2022_best.pt",
+  "framework": "PyTorch 2.6.0+cu132 / Ultralytics YOLO",
+  "accelerator": "NVIDIA GeForce RTX 5050 Laptop GPU (cuda:0)",
+  "cuda_version": "13.2",
+  "input_sources_evaluated": [
+    {
+      "source": "test_road.mp4",
+      "resolution": "1080x1080",
+      "fps": 23.98,
+      "frames_processed": 48,
+      "defect_classes_detected": ["D40"],
+      "peak_confidence": 0.3311,
+      "nature": "Real Indian asphalt road dashcam video with water-filled pothole"
+    },
+    {
+      "source": "test_road1.mp4",
+      "resolution": "848x392",
+      "fps": 38.56,
+      "frames_processed": 413,
+      "defect_classes_detected": ["D00", "D10", "D40"],
+      "peak_confidence": 0.8154,
+      "nature": "Real Indian urban carriageway dashcam video"
+    },
+    {
+      "source": "RDD2022 India Subset (10 images)",
+      "resolution": "720x720",
+      "frames_processed": 10,
+      "defect_classes_detected": ["D00", "D10", "D20", "D40"],
+      "peak_confidence": 0.7818,
+      "nature": "Authentic Indian road imagery from Figshare RDD2022 benchmark"
+    }
+  ],
+  "excluded_sources": [
+    {
+      "source": "early_indoor_lobby_test.mp4",
+      "reason": "Visitor lobby indoor floor tiles mimic linear crack patterns under certain angles (domain shift). Excluded from all validation claims."
+    }
+  ],
+  "per_class_summary": {
+    "D00_longitudinal_crack": {
+      "status": "IMPLEMENTED + REAL VALIDATED",
+      "video_observations": 4,
+      "peak_confidence": 0.8154,
+      "evaluation_nature": "Visual and operational confirmation across continuous video frames"
+    },
+    "D10_transverse_crack": {
+      "status": "IMPLEMENTED + PARTIALLY VALIDATED",
+      "video_observations": 1,
+      "peak_confidence": 0.404,
+      "evaluation_nature": "Corroborated across 14 consecutive video frames and 2 static images"
+    },
+    "D20_alligator_crack": {
+      "status": "IMPLEMENTED + REAL VALIDATED",
+      "static_image_detections": 10,
+      "peak_confidence": 0.7818,
+      "evaluation_nature": "Multi-image detection on authentic asphalt surfaces"
+    },
+    "D40_pothole": {
+      "status": "IMPLEMENTED + REAL VALIDATED",
+      "video_observations": 2,
+      "peak_confidence": 0.7028,
+      "evaluation_nature": "Confirmed across 2 real dashcam videos and static imagery"
+    }
+  },
+  "latency_measurements": {
+    "yolo12s_rdd_1080p_ms": 20.13,
+    "yolo12s_rdd_848p_ms": 13.38,
+    "intelligence_layer_ms": 1.45,
+    "effective_end_to_end_pipeline_fps": "3.1 to 8.5 FPS (with disk writing and video encoding)",
+    "frame_scheduler_policy_fps": 3.0
+  }
+}

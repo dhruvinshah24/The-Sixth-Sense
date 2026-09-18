@@ -1,41 +1,45 @@
 {
-  "timestamp": 1789682607.9021916,
+  "timestamp": 1789736937.218155,
   "project": "The Sixth Sense \u2014 Mobile Urban Intelligence Platform",
   "sih_problem_statements": [
     "PS 26124",
     "PS 26125"
   ],
   "integration_status": "COMPLETE_AND_VERIFIED",
+  "demonstration_type": "DETERMINISTIC_SYSTEM_INTEGRATION_DEMONSTRATION",
+  "demonstration_scope": "Full 14-stage multi-domain pipeline flow across Persons 1-6",
+  "real_perception_reference": "See outputs/demo/ and docs/ROAD_DAMAGE_PERCEPTION_VALIDATION.md for genuine GPU video inference",
+  "closure_verification_nature": "SIMULATED_OPERATIONAL_WORKFLOW (Validates closed-loop verification logic without claiming physical road repair)",
   "workstreams_integrated": [
     {
       "person": 1,
       "domain": "ROAD_INFRASTRUCTURE",
-      "status": "IMPLEMENTED + VALIDATED"
+      "status": "IMPLEMENTED + REAL VALIDATED (Defects) / PARTIALLY VALIDATED (Aux Infra)"
     },
     {
       "person": 2,
       "domain": "TRAFFIC_MOBILITY",
-      "status": "IMPLEMENTED + VALIDATED"
+      "status": "IMPLEMENTED + REAL VALIDATED (Counts/Flow) / UNAVAILABLE (Speed/Occupancy)"
     },
     {
       "person": 3,
       "domain": "SAFETY_VRU",
-      "status": "IMPLEMENTED + VALIDATED"
+      "status": "IMPLEMENTED + REAL VALIDATED (Detection/Synergy) / SIMULATED (School Geofence)"
     },
     {
       "person": 4,
       "domain": "INCIDENT_ENFORCEMENT",
-      "status": "IMPLEMENTED + VALIDATED"
+      "status": "IMPLEMENTED + REAL VALIDATED (Non-Enforcement Safeguards) / NOT IMPLEMENTED (ANPR)"
     },
     {
       "person": 5,
       "domain": "PLATFORM_AUDIT_TELEMETRY",
-      "status": "IMPLEMENTED + VALIDATED"
+      "status": "IMPLEMENTED + REAL VALIDATED (Platform/Audit) / SIMULATED (Follow-up pass)"
     },
     {
       "person": 6,
       "domain": "COMMAND_CENTER_GIS",
-      "status": "IMPLEMENTED + VALIDATED"
+      "status": "IMPLEMENTED + REAL VALIDATED (Dashboard/GIS)"
     }
   ],
   "corridor": "SEG_MUMBAI_SV_ROAD",
@@ -54,14 +58,14 @@
     "artifacts_exported": 8
   },
   "artifacts": {
-    "observations": "C:\\Users\\dhruv\\AppData\\Local\\Temp\\pytest-of-dhruv\\pytest-107\\test_end_to_end_full_team_inte0\\test_urban_intel\\observations.json",
-    "persistent_issues": "C:\\Users\\dhruv\\AppData\\Local\\Temp\\pytest-of-dhruv\\pytest-107\\test_end_to_end_full_team_inte0\\test_urban_intel\\persistent_issues.json",
-    "road_health": "C:\\Users\\dhruv\\AppData\\Local\\Temp\\pytest-of-dhruv\\pytest-107\\test_end_to_end_full_team_inte0\\test_urban_intel\\road_health.json",
-    "traffic_state": "C:\\Users\\dhruv\\AppData\\Local\\Temp\\pytest-of-dhruv\\pytest-107\\test_end_to_end_full_team_inte0\\test_urban_intel\\traffic_state.json",
-    "fused_context": "C:\\Users\\dhruv\\AppData\\Local\\Temp\\pytest-of-dhruv\\pytest-107\\test_end_to_end_full_team_inte0\\test_urban_intel\\fused_context.json",
-    "priority_queue": "C:\\Users\\dhruv\\AppData\\Local\\Temp\\pytest-of-dhruv\\pytest-107\\test_end_to_end_full_team_inte0\\test_urban_intel\\priority_queue.json",
-    "governance_decisions": "C:\\Users\\dhruv\\AppData\\Local\\Temp\\pytest-of-dhruv\\pytest-107\\test_end_to_end_full_team_inte0\\test_urban_intel\\governance_decisions.json",
-    "final_summary": "C:\\Users\\dhruv\\AppData\\Local\\Temp\\pytest-of-dhruv\\pytest-107\\test_end_to_end_full_team_inte0\\test_urban_intel\\final_summary.json"
+    "observations": "C:\\Users\\dhruv\\AppData\\Local\\Temp\\pytest-of-dhruv\\pytest-110\\test_end_to_end_full_team_inte0\\test_urban_intel\\observations.json",
+    "persistent_issues": "C:\\Users\\dhruv\\AppData\\Local\\Temp\\pytest-of-dhruv\\pytest-110\\test_end_to_end_full_team_inte0\\test_urban_intel\\persistent_issues.json",
+    "road_health": "C:\\Users\\dhruv\\AppData\\Local\\Temp\\pytest-of-dhruv\\pytest-110\\test_end_to_end_full_team_inte0\\test_urban_intel\\road_health.json",
+    "traffic_state": "C:\\Users\\dhruv\\AppData\\Local\\Temp\\pytest-of-dhruv\\pytest-110\\test_end_to_end_full_team_inte0\\test_urban_intel\\traffic_state.json",
+    "fused_context": "C:\\Users\\dhruv\\AppData\\Local\\Temp\\pytest-of-dhruv\\pytest-110\\test_end_to_end_full_team_inte0\\test_urban_intel\\fused_context.json",
+    "priority_queue": "C:\\Users\\dhruv\\AppData\\Local\\Temp\\pytest-of-dhruv\\pytest-110\\test_end_to_end_full_team_inte0\\test_urban_intel\\priority_queue.json",
+    "governance_decisions": "C:\\Users\\dhruv\\AppData\\Local\\Temp\\pytest-of-dhruv\\pytest-110\\test_end_to_end_full_team_inte0\\test_urban_intel\\governance_decisions.json",
+    "final_summary": "C:\\Users\\dhruv\\AppData\\Local\\Temp\\pytest-of-dhruv\\pytest-110\\test_end_to_end_full_team_inte0\\test_urban_intel\\final_summary.json"
   },
   "command_center_endpoint": "/urban-intelligence/"
 }

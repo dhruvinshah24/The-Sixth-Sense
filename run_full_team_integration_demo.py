@@ -66,10 +66,12 @@ def print_step(step_idx: int, title: str) -> None:
 
 
 def run_full_integration(output_dir: str = "outputs/urban_intelligence") -> Dict[str, Any]:
-    print_banner("THE SIXTH SENSE: FULL TEAM INTEGRATION DEMONSTRATION (SIH 2026)")
-    print("Corridor : SEG_MUMBAI_SV_ROAD (Swami Vivekanand Road Transit Corridor)")
-    print("Domains  : Person 1 (Road), Person 2 (Traffic), Person 3 (Safety),")
-    print("           Person 4 (Incident), Person 5 (Platform/Audit), Person 6 (GIS/UI)\n")
+    print_banner("THE SIXTH SENSE: DETERMINISTIC SYSTEM INTEGRATION DEMONSTRATION")
+    print("  Corridor : SEG_MUMBAI_SV_ROAD (Swami Vivekanand Road Transit Corridor)")
+    print("  Type     : DETERMINISTIC SYSTEM INTEGRATION DEMONSTRATION")
+    print("  Purpose  : Verifies complete 14-step cross-domain flow across Persons 1-6.")
+    print("  Note     : Uses deterministic scenario observations to validate integration.")
+    print("             For genuine GPU video inference, see 'run_urban_ai.py' & 'docs/'.\n")
 
     pipeline = UrbanIntelligencePipeline(dedup_radius_m=30.0)
     router = DepartmentRouter()
@@ -77,7 +79,7 @@ def run_full_integration(output_dir: str = "outputs/urban_intelligence") -> Dict
     # ---------------------------------------------------------------------- #
     # STEP 1: Bus Camera Ingestion & Quality Gating (Person 5)
     # ---------------------------------------------------------------------- #
-    print_step(1, "BUS CAMERA INGESTION & QUALITY GATING (Person 5)")
+    print_step(1, "BUS CAMERA INGESTION & QUALITY GATING [PLATFORM INTEGRATION]")
     bus_id_1 = "BEST_BUS_342"
     camera_id = "CAM_FRONT_1080P"
     t0 = 1726620000.0
@@ -88,7 +90,7 @@ def run_full_integration(output_dir: str = "outputs/urban_intelligence") -> Dict
     # ---------------------------------------------------------------------- #
     # STEP 2: Road Defect Detection (Person 1)
     # ---------------------------------------------------------------------- #
-    print_step(2, "ROAD DEFECT PERCEPTION (Person 1 - Pothole D40)")
+    print_step(2, "ROAD DEFECT PERCEPTION [DETERMINISTIC INGESTION -- D40 POTHOLE]")
     obs_pothole_bus1 = Observation(
         obs_id="obs_pothole_sv_01",
         bus_id=bus_id_1,
@@ -121,11 +123,12 @@ def run_full_integration(output_dir: str = "outputs/urban_intelligence") -> Dict
     print(f"  * Defect Identified     : {obs_pothole_bus1.class_name} ({obs_pothole_bus1.event_type.value})")
     print(f"  * Model Checkpoint      : {obs_pothole_bus1.model_name}")
     print(f"  * Confidence / Severity : {obs_pothole_bus1.confidence:.2f} / {obs_pothole_bus1.severity.value}")
+    print("  * Truth Label           : DETERMINISTIC INTEGRATION SCENARIO (Synthetic Observation)")
 
     # ---------------------------------------------------------------------- #
     # STEP 3: Vehicle & Traffic Mobility State (Person 2)
     # ---------------------------------------------------------------------- #
-    print_step(3, "TRAFFIC & MOBILITY MONITORING (Person 2)")
+    print_step(3, "TRAFFIC & MOBILITY MONITORING [DETERMINISTIC INGESTION -- 18 VEHICLES]")
     # 18 vehicles observed in transit window along SV Road corridor
     traffic_records = []
     classes = ["car", "motorcycle", "auto_rickshaw", "bus", "truck"]
@@ -141,11 +144,12 @@ def run_full_integration(output_dir: str = "outputs/urban_intelligence") -> Dict
     pipeline.ingest_traffic_records(traffic_records, road_segment_id="SEG_MUMBAI_SV_ROAD")
     print(f"  * Vehicles Tracked      : {len(traffic_records)} vehicles across 5 classification categories")
     print(f"  * Corridor Assigned     : SEG_MUMBAI_SV_ROAD")
+    print("  * Truth Label           : DETERMINISTIC VEHICLE PROXIES (Speed & Lane Occupancy: UNAVAILABLE)")
 
     # ---------------------------------------------------------------------- #
     # STEP 4: Vulnerable Road User (VRU) / Pedestrian Safety (Person 3)
     # ---------------------------------------------------------------------- #
-    print_step(4, "VRU & PEDESTRIAN SAFETY PERCEPTION (Person 3)")
+    print_step(4, "VRU & PEDESTRIAN SAFETY PERCEPTION [DETERMINISTIC INGESTION -- VRU]")
     vru_event = create_safety_observation(
         bus_id=bus_id_1,
         timestamp=t0 + 0.2,
@@ -162,11 +166,12 @@ def run_full_integration(output_dir: str = "outputs/urban_intelligence") -> Dict
     print(f"  * VRU Safety Event      : {vru_event.event_type} near carriageway edge")
     print(f"  * Confidence / Severity : {vru_event.confidence:.2f} / {vru_event.severity}")
     print(f"  * Spatial Proximity     : Within 1.5m of observed road surface defect")
+    print("  * Truth Label           : DETERMINISTIC TEST CASE (Person 3 VRU Factory)")
 
     # ---------------------------------------------------------------------- #
     # STEP 5: Incident Candidate Event (Person 4)
     # ---------------------------------------------------------------------- #
-    print_step(5, "INCIDENT CANDIDATE DETECTION & SAFEGUARD (Person 4)")
+    print_step(5, "INCIDENT CANDIDATE & SAFEGUARD [DETERMINISTIC INGESTION -- INCIDENT]")
     incident_event = create_incident_observation(
         bus_id=bus_id_1,
         timestamp=t0 + 0.5,
@@ -183,27 +188,30 @@ def run_full_integration(output_dir: str = "outputs/urban_intelligence") -> Dict
     print(f"  * Incident Candidate    : {incident_event.event_type}")
     print(f"  * Legal / AI Safeguard  : {incident_event.provenance['enforcement_safeguard']}")
     print(f"  * Human Review Flag     : {incident_event.evidence['requires_human_review']} (NO automated penalization)")
+    print("  * Truth Label           : DETERMINISTIC TEST CASE (Person 4 Non-Enforcement Candidate; ANPR: NOT IMPLEMENTED)")
 
     # ---------------------------------------------------------------------- #
     # STEP 6: GPS & Telemetry Association (Person 5)
     # ---------------------------------------------------------------------- #
-    print_step(6, "GPS & TELEMETRY SPATIAL ASSOCIATION (Person 5)")
+    print_step(6, "GPS & TELEMETRY SPATIAL ASSOCIATION [PLATFORM TELEMETRY]")
     print(f"  * Correlated Coordinates: Lat {obs_pothole_bus1.gps.lat:.6f}, Lon {obs_pothole_bus1.gps.lon:.6f}")
     print(f"  * Telemetry Status      : {obs_pothole_bus1.gps.status.value} (Uncertainty: {obs_pothole_bus1.gps.uncertainty_m:.1f} m)")
     print(f"  * Heading / Velocity    : Heading 180.0 deg, Transit fleet speed 14.2 km/h")
+    print("  * Truth Label           : DETERMINISTIC TELEMETRY TEST CASE")
 
     # ---------------------------------------------------------------------- #
     # STEP 7: Ingest Defect into City Memory (Pass 1)
     # ---------------------------------------------------------------------- #
-    print_step(7, "UNIFIED OBSERVATION INGESTION & CITY MEMORY PASS 1")
+    print_step(7, "UNIFIED OBSERVATION INGESTION & CITY MEMORY PASS 1 [ALGORITHMIC STORE]")
     issue_pass1 = pipeline.ingest_observation(obs_pothole_bus1, road_segment_id="SEG_MUMBAI_SV_ROAD")
     print(f"  * Initial Issue Created : {issue_pass1.issue_id}")
     print(f"  * Fleet Sighting Count  : {issue_pass1.bus_count} bus (Pass 1: Uncorroborated single sighting)")
+    print("  * Truth Label           : ALGORITHMIC ENGINE EXECUTION (City Memory)")
 
     # ---------------------------------------------------------------------- #
     # STEP 8: Fleet Corroboration by Second Bus (Pass 2)
     # ---------------------------------------------------------------------- #
-    print_step(8, "MULTI-BUS FLEET CORROBORATION (Pass 2 - Best Bus 215)")
+    print_step(8, "MULTI-BUS FLEET CORROBORATION [DETERMINISTIC MULTI-PASS SCENARIO]")
     bus_id_2 = "BEST_BUS_215"
     t1 = t0 + 2100.0  # 35 minutes later
     obs_pothole_bus2 = Observation(
@@ -239,11 +247,12 @@ def run_full_integration(output_dir: str = "outputs/urban_intelligence") -> Dict
     print(f"  * Second Bus Sighting   : Bus ID {bus_id_2} (Delta T: +35 mins, Delta Distance: 2.3 m)")
     print(f"  * Deduplication Result  : Merged into stable Issue ID {issue_pass2.issue_id}")
     print(f"  * Fleet Corroboration   : CONFIRMED (Unique Buses: {issue_pass2.bus_count}, Observations: {len(issue_pass2.observations)})")
+    print("  * Truth Label           : DETERMINISTIC MULTI-BUS SCENARIO (Logic Validation)")
 
     # ---------------------------------------------------------------------- #
     # STEP 9: Full Multi-Domain Evaluation (Cross-Domain Fusion)
     # ---------------------------------------------------------------------- #
-    print_step(9, "CROSS-DOMAIN FUSION ENGINE EVALUATION")
+    print_step(9, "CROSS-DOMAIN FUSION ENGINE EVALUATION [ALGORITHMIC EXECUTION]")
     summary = pipeline.process_all()
     fused_ctx = pipeline._evaluated_fused_contexts["SEG_MUMBAI_SV_ROAD"]
 
@@ -255,40 +264,44 @@ def run_full_integration(output_dir: str = "outputs/urban_intelligence") -> Dict
     print("  * Explainable Synthesis :")
     for s in fused_ctx.explainable_synthesis:
         print(f"      -> {s}")
+    print("  * Truth Label           : ALGORITHMIC ENGINE EXECUTION (Synergy Multipliers)")
 
     # ---------------------------------------------------------------------- #
     # STEP 10: Road Health Evaluation (IRC:SP:20)
     # ---------------------------------------------------------------------- #
-    print_step(10, "ROAD HEALTH ENGINE EVALUATION (Person 1 - IRC:SP:20 Standard)")
+    print_step(10, "ROAD HEALTH ENGINE EVALUATION [ALGORITHMIC ENGINE -- IRC:SP:20 Standard]")
     road_health = pipeline._evaluated_road_health["SEG_MUMBAI_SV_ROAD"]
     print(f"  * Structural Score      : {road_health.health_score}/100")
     print(f"  * Scoring Deductions    : Total Deductions: {road_health.scoring_factors.get('total_deductions', 0.0):.1f} pts")
     print(f"  * Maintenance Rec       : {road_health.recommendation}")
+    print("  * Truth Label           : ALGORITHMIC ENGINE EXECUTION (Deterministic Health Metric)")
 
     # ---------------------------------------------------------------------- #
     # STEP 11: Multi-Factor Priority Scoring V2
     # ---------------------------------------------------------------------- #
-    print_step(11, "PRIORITY ENGINE V2 MULTI-FACTOR SCORING")
+    print_step(11, "PRIORITY ENGINE V2 MULTI-FACTOR SCORING [ALGORITHMIC ENGINE]")
     priority_result = pipeline._evaluated_priorities[issue_pass2.issue_id]
     print(f"  * Final Priority Score  : {priority_result.priority_score:.1f} / 100.0")
     print(f"  * Priority Band         : {priority_result.priority_band}")
     print(f"  * Factor Breakdown      : {priority_result.score_breakdown}")
     print(f"  * Deterministic Reasons : {', '.join(priority_result.reasons)}")
+    print("  * Truth Label           : ALGORITHMIC ENGINE EXECUTION (Explainable 0-100 Score)")
 
     # ---------------------------------------------------------------------- #
     # STEP 12: Confidence & Governance Gating
     # ---------------------------------------------------------------------- #
-    print_step(12, "CONFIDENCE-AWARE GOVERNANCE DECISION")
+    print_step(12, "CONFIDENCE-AWARE GOVERNANCE DECISION [GOVERNANCE POLICY]")
     gov_decision = pipeline._evaluated_governance[issue_pass2.issue_id]
     print(f"  * Automation Tier       : {gov_decision.tier.value}")
     print(f"  * Action Allowed        : {gov_decision.governance_action.value}")
     print(f"  * Auto-Dispatch Permitted: {gov_decision.auto_dispatch_permitted}")
     print(f"  * Explanation           : {gov_decision.rationale}")
+    print("  * Truth Label           : ALGORITHMIC POLICY EXECUTION (Human-in-the-Loop Safeguard)")
 
     # ---------------------------------------------------------------------- #
     # STEP 13: Municipal Action Packaging & Work Item Generation (Person 5)
     # ---------------------------------------------------------------------- #
-    print_step(13, "MUNICIPAL WORK-ORDER & EVIDENCE AUDIT TRAIL (Person 5)")
+    print_step(13, "MUNICIPAL WORK-ORDER & EVIDENCE AUDIT TRAIL [PLATFORM AUDIT]")
     route_result = router.route(issue_pass2)
     work_item = WorkItemBuilder.build(
         issue=issue_pass2,
@@ -305,11 +318,12 @@ def run_full_integration(output_dir: str = "outputs/urban_intelligence") -> Dict
     print(f"  * Assigned Department   : {work_item.department_display} ({work_item.department})")
     print(f"  * Routing Reason        : {work_item.routing_reason}")
     print(f"  * Audit Evidence Chain  : Verified ({len(evidence_chain.observation_records)} observations, SHA-256 traceable)")
+    print("  * Truth Label           : PLATFORM INTEGRATION EXECUTION (WorkItem & Audit Trail)")
 
     # ---------------------------------------------------------------------- #
     # STEP 14: Proof-of-Closure Recheck & Command Center Feed (Person 5 & 6)
     # ---------------------------------------------------------------------- #
-    print_step(14, "PROOF-OF-CLOSURE RECHECK & COMMAND CENTER FEED (Person 5 & 6)")
+    print_step(14, "PROOF-OF-CLOSURE RECHECK [SIMULATED OPERATIONAL WORKFLOW]")
     # PWD Contractor files repair claim
     claim = RepairClaimBuilder.build(
         issue_id=issue_pass2.issue_id,
@@ -318,6 +332,7 @@ def run_full_integration(output_dir: str = "outputs/urban_intelligence") -> Dict
         notes="Pothole milled, cold-mix asphalt applied, and compacted.",
     )
     print(f"  * Repair Claim Filed    : Claim ID {claim.claim_id} by {claim.claimed_by}")
+    print("  * Note on Claim         : SIMULATED OPERATIONAL WORKFLOW (Contractor Claim)")
 
     # Independent third bus makes follow-up pass 24 hours later
     follow_up = FollowUpPass(
@@ -340,6 +355,7 @@ def run_full_integration(output_dir: str = "outputs/urban_intelligence") -> Dict
     print(f"  * Verification Result   : {verif_res.verification_result} (Confidence: {verif_res.verification_confidence:.2f})")
     print(f"  * Post-Repair Health    : Score recovered to {updated_health.health_score}/100 [{updated_health.health_state.value}]")
     print(f"  * Pavement Trend        : {updated_health.trend.value}")
+    print("  * Truth Label           : SIMULATED OPERATIONAL WORKFLOW (Validates verification logic without claiming physical repair)")
 
     # Export all 8 standard artifacts
     exported_paths = pipeline.export_artifacts(output_dir=output_dir)
@@ -350,13 +366,17 @@ def run_full_integration(output_dir: str = "outputs/urban_intelligence") -> Dict
         "project": "The Sixth Sense — Mobile Urban Intelligence Platform",
         "sih_problem_statements": ["PS 26124", "PS 26125"],
         "integration_status": "COMPLETE_AND_VERIFIED",
+        "demonstration_type": "DETERMINISTIC_SYSTEM_INTEGRATION_DEMONSTRATION",
+        "demonstration_scope": "Full 14-stage multi-domain pipeline flow across Persons 1-6",
+        "real_perception_reference": "See outputs/demo/ and docs/ROAD_DAMAGE_PERCEPTION_VALIDATION.md for genuine GPU video inference",
+        "closure_verification_nature": "SIMULATED_OPERATIONAL_WORKFLOW (Validates closed-loop verification logic without claiming physical road repair)",
         "workstreams_integrated": [
-            {"person": 1, "domain": "ROAD_INFRASTRUCTURE", "status": "IMPLEMENTED + VALIDATED"},
-            {"person": 2, "domain": "TRAFFIC_MOBILITY", "status": "IMPLEMENTED + VALIDATED"},
-            {"person": 3, "domain": "SAFETY_VRU", "status": "IMPLEMENTED + VALIDATED"},
-            {"person": 4, "domain": "INCIDENT_ENFORCEMENT", "status": "IMPLEMENTED + VALIDATED"},
-            {"person": 5, "domain": "PLATFORM_AUDIT_TELEMETRY", "status": "IMPLEMENTED + VALIDATED"},
-            {"person": 6, "domain": "COMMAND_CENTER_GIS", "status": "IMPLEMENTED + VALIDATED"},
+            {"person": 1, "domain": "ROAD_INFRASTRUCTURE", "status": "IMPLEMENTED + REAL VALIDATED (Defects) / PARTIALLY VALIDATED (Aux Infra)"},
+            {"person": 2, "domain": "TRAFFIC_MOBILITY", "status": "IMPLEMENTED + REAL VALIDATED (Counts/Flow) / UNAVAILABLE (Speed/Occupancy)"},
+            {"person": 3, "domain": "SAFETY_VRU", "status": "IMPLEMENTED + REAL VALIDATED (Detection/Synergy) / SIMULATED (School Geofence)"},
+            {"person": 4, "domain": "INCIDENT_ENFORCEMENT", "status": "IMPLEMENTED + REAL VALIDATED (Non-Enforcement Safeguards) / NOT IMPLEMENTED (ANPR)"},
+            {"person": 5, "domain": "PLATFORM_AUDIT_TELEMETRY", "status": "IMPLEMENTED + REAL VALIDATED (Platform/Audit) / SIMULATED (Follow-up pass)"},
+            {"person": 6, "domain": "COMMAND_CENTER_GIS", "status": "IMPLEMENTED + REAL VALIDATED (Dashboard/GIS)"},
         ],
         "corridor": "SEG_MUMBAI_SV_ROAD",
         "metrics": {

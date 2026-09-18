@@ -1,0 +1,45 @@
+{
+  "audit_date": "2026-09-18",
+  "capabilities": {
+    "vehicle_detection": {
+      "status": "IMPLEMENTED + REAL VALIDATED",
+      "model": "YOLO11x General COCO Detector",
+      "test_source": "test_road1.mp4 (413 frames) and night_drive",
+      "classes": ["car", "motorcycle", "bus", "truck", "bicycle", "auto_rickshaw"]
+    },
+    "vehicle_counting": {
+      "status": "IMPLEMENTED + REAL VALIDATED",
+      "method": "2D line-crossing segment intersection with persistent counted_track_ids set",
+      "guarantee": "Zero duplicate counts of stalled/oscillating tracks",
+      "test_source": "test_road1.mp4"
+    },
+    "traffic_density_and_congestion": {
+      "status": "IMPLEMENTED + REAL VALIDATED",
+      "method": "60-second temporal window vehicle proxy grouping and density tiers",
+      "test_source": "outputs/night_drive/ (69 synchronized observations)"
+    },
+    "persistent_bottleneck_detection": {
+      "status": "IMPLEMENTED + REAL VALIDATED",
+      "method": "Multi-window recurrence requirement (>= 2 congested windows in same spatial corridor)",
+      "test_source": "outputs/traffic_demo/persistent_bottlenecks.json"
+    },
+    "route_delay_analysis": {
+      "status": "IMPLEMENTED + REAL VALIDATED",
+      "method": "Haversine segment travel time vs prototype free-flow baseline (30 km/h)",
+      "test_source": "data/demo_gps.csv (61 waypoints)"
+    },
+    "congestion_heatmap_geojson": {
+      "status": "IMPLEMENTED + REAL VALIDATED",
+      "method": "Spatial binning of verified vehicle perception points into GeoJSON FeatureCollection",
+      "test_source": "outputs/traffic_demo/traffic_heatmap.geojson"
+    },
+    "speed_estimation": {
+      "status": "NOT IMPLEMENTED / UNAVAILABLE",
+      "reason": "Camera optics and perspective transform uncalibrated"
+    },
+    "lane_occupancy": {
+      "status": "NOT IMPLEMENTED / UNAVAILABLE",
+      "reason": "Lane boundary geometric model not deployed"
+    }
+  }
+}
