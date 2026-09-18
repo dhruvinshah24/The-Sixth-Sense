@@ -27,8 +27,8 @@ _SEVERITY_ORDER = {
     SeverityTier.CRITICAL: 3,
 }
 
-# Spatial dedup threshold in metres
-_DEFAULT_DEDUP_RADIUS_M = 30.0
+# Spatial dedup threshold in metres (20.0m provides optimal separation of adjacent block defects while tolerating GPS drift)
+_DEFAULT_DEDUP_RADIUS_M = 20.0
 
 
 class IssueManager:
@@ -104,6 +104,17 @@ class IssueManager:
             if issue.center_gps is None:
                 continue
 
+            # Directional Carriageway Guard: Opposite travel directions (>110 deg) indicate opposite carriageways
+            if (
+                issue.center_gps.heading is not None
+                and obs.gps.heading is not None
+            ):
+                d_heading = abs(issue.center_gps.heading - obs.gps.heading) % 360.0
+                if d_heading > 180.0:
+                    d_heading = 360.0 - d_heading
+                if d_heading > 110.0:
+                    continue  # Opposite direction of travel — distinct physical carriageway
+
             dist = _haversine_m(
                 issue.center_gps.lat, issue.center_gps.lon,
                 obs.gps.lat, obs.gps.lon,
@@ -161,12 +172,13 @@ class IssueManager:
             avg_lat = sum(g.lat for g in valid_gps) / len(valid_gps)
             avg_lon = sum(g.lon for g in valid_gps) / len(valid_gps)
             max_unc = max(g.uncertainty_m for g in valid_gps)
+            latest_heading = valid_gps[-1].heading if valid_gps else None
             issue.center_gps = GPSPoint(
                 lat=round(avg_lat, 7),
                 lon=round(avg_lon, 7),
                 timestamp=obs.last_seen_ts,
                 uncertainty_m=round(max_unc, 2),
-                heading=None,
+                heading=latest_heading,
                 status=valid_gps[-1].status,
             )
 

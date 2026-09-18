@@ -52,7 +52,7 @@ class CityMemory:
 
     def __init__(
         self,
-        dedup_radius_m: float = 30.0,
+        dedup_radius_m: float = 20.0,
         health_engine: Optional[RoadHealthEngine] = None,
     ) -> None:
         self.issue_manager = IssueManager(dedup_radius_m=dedup_radius_m)

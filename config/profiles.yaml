@@ -29,9 +29,13 @@ urban_mvp:
     motorcycle:   0.40
     bicycle:      0.40
     person:       0.40
-    road_damage:  0.35   # Road damage model classes
-    pothole:      0.35
-    crack:        0.30
+    road_damage:  0.30
+    pothole:      0.25   # Calibrated from test_road.mp4 water-filled pothole sweep (conf 0.27-0.33)
+    crack:        0.28   # Calibrated from test_road1.mp4 continuous crack sweep
+    D00:          0.28   # Longitudinal cracks
+    D10:          0.25   # Transverse cracks (recovers genuine D10 without flicker noise)
+    D20:          0.25   # Alligator cracks
+    D40:          0.25   # Potholes
 
   # Quality gate thresholds
   quality:

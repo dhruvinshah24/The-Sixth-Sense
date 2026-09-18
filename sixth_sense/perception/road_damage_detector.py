@@ -115,9 +115,17 @@ class RoadDamageDetector:
                 raw_conf = float(box.conf[0])
 
                 # Per-class threshold takes priority over global conf_threshold
+                semantic_alias = (
+                    "pothole" if raw_class in ("D40", "pothole")
+                    else ("crack" if raw_class in ("D00", "D10", "D20", "crack")
+                    else "road_damage")
+                )
                 threshold = self._per_class.get(
                     raw_class,
-                    self._per_class.get(str(cls_id), self.conf_threshold)
+                    self._per_class.get(
+                        semantic_alias,
+                        self._per_class.get(str(cls_id), self.conf_threshold)
+                    )
                 )
                 if raw_conf < threshold:
                     continue
