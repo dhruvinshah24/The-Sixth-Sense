@@ -29,8 +29,8 @@ This engineering report details the comprehensive final accuracy, robustness, an
 | **D40 Threshold** | Default 0.35 (coarse fallback) | Calibrated 0.25 (per-class config) | $+100\%$ wet-surface defect recovery |
 | **D10 Threshold** | Default 0.30 | Calibrated 0.25 | Preserves low-aspect transverse cracks |
 | **Dedup Radius** | Default 30.0 m (unbounded heading) | 20.0 m + $\Delta\text{heading} > 110^\circ$ guard | Eliminates cross-carriageway false merges |
-| **Issue Merging Precision** | 60% on opposing lanes (30m) | 100% on opposing lanes (20m + heading) | $+40\%$ spatial deduplication precision |
-| **Model Weight State** | `best.pt` (RDD2022 YOLOv8n) | Unchanged (Retained `best.pt`) | Avoided catastrophic overfitting |
+| **Adversarial Dedup Matrix** | 2 false merges on opposing lanes (30m) | 100% correct outcomes on tested 7-scenario matrix (20m + heading) | Eliminated cross-carriageway false merges |
+| **Model Weight State** | `yolo12s_RDD2022_best.pt` (YOLO12s) | Unchanged (`models/yolo12s_RDD2022_best.pt`) | Avoided catastrophic overfitting |
 | **Architecture State** | End-to-end integrated | End-to-end integrated & frozen | Ready for live demonstration |
 
 ---
@@ -61,13 +61,13 @@ Prior to modifying any thresholds or heuristics, the complete test suite was exe
 ## 4. Model Audit & Retraining Decision
 
 ### Evaluated Model:
-- **File:** `models/best.pt` (RDD2022 trained YOLOv8n, PyTorch FP32/FP16 weights)
+- **File:** `models/yolo12s_RDD2022_best.pt` (RDD2022 trained YOLO12s architecture with A2C2f attention, PyTorch FP16/FP32 weights)
 - **Target Classes:** `D00` (Longitudinal Crack), `D10` (Transverse Crack), `D20` (Alligator Crack), `D40` (Pothole).
 
 ### Retraining vs Calibration Analysis:
 1. **Available Data:** The workspace contains real dashcam footage (`test_road.mp4`, `test_road1.mp4`) and an evaluation sample of RDD2022 India road footage. It does **not** contain an exhaustive, freshly-labeled 10,000-image balanced dataset.
 2. **Overfitting Risk:** Re-training YOLOv8 on small video snippet splits causes rapid catastrophic forgetting and overfitting to camera focal lengths, weather artifacts, and dashboard reflections.
-3. **Audit Finding:** The base features learned by `best.pt` for pothole edge contours and asphalt fissures are fundamentally solid. The primary failure mode was **decision-boundary gating**: high-water reflection potholes produce lower raw logits ($\sim 0.27–0.33$) due to specular glint, causing an arbitrary $0.35$ threshold to discard true defects.
+3. **Audit Finding:** The base features learned by `yolo12s_RDD2022_best.pt` for pothole edge contours and asphalt fissures are fundamentally solid. The primary failure mode was **decision-boundary gating**: high-water reflection potholes produce lower raw logits ($\sim 0.27–0.33$) due to specular glint, causing an arbitrary $0.35$ threshold to discard true defects.
 4. **Engineering Decision:** **DO NOT RETRAIN.** Instead, calibrate per-class detection thresholds and optimize post-detector temporal/spatial filtering. This provides deterministic, measurable recall improvements with zero risk of weight corruption.
 
 ---
@@ -102,7 +102,7 @@ Dashcam footage is prone to single-frame optical anomalies (sun glare, windshiel
 | **5** | 1 | 1 | 3 | 9 | Only captures stationary longitudinal cracks |
 
 ### Physical Justification:
-A vehicle traveling at $40\text{ km/h}$ moves at $11.1\text{ m/s}$. At $25\text{ FPS}$, a camera with a $15\text{ m}$ road horizon observes a transverse crack ($0.3\text{ m}$ depth) for roughly $2$ to $4$ frames before it leaves the bottom of the camera frame. A temporal persistence requirement of $\ge 3$ frames inevitably discards transverse defects. Therefore, `min_detections = 2` is the mathematically and empirically optimal setting.
+A vehicle traveling at $40\text{ km/h}$ moves at $11.1\text{ m/s}$. At $25\text{ FPS}$, a camera with a $15\text{ m}$ road horizon observes a transverse crack ($0.3\text{ m}$ depth) for roughly $2$ to $4$ frames before it leaves the bottom of the camera frame. A temporal persistence requirement of $\ge 3$ frames inevitably discards transverse defects. Therefore, `min_detections = 2` was empirically identified as optimal for brief defect retention in evaluation profiles, whereas the production `urban_mvp` profile defaults to `3` for conservative noise suppression on regular fleet operations.
 
 ---
 
@@ -212,19 +212,21 @@ The `RoadHealthEngine` models continuous structural pavement degradation:
 ## 14. Governance & Automation Action Accuracy
 
 The governance layer enforces safety boundaries between autonomous municipal work-order dispatch and mandatory human supervisory review:
-- **Confidence $\ge 0.85$ + Multi-bus $\ge 2$:** Trigger `AUTO_DISPATCH_REPAIR_TICKET` (e.g., severe potholes on major transit arteries).
-- **Confidence $0.60 - 0.84$:** Trigger `MUNICIPAL_DASHBOARD_REVIEW`.
-- **Confidence $< 0.60$:** Retain in `CITY_MEMORY_PROBATION`.
+- **High Consequence Events (Contractor dispute / legal liability):** Strictly requires human signoff (`HUMAN_APPROVAL_REQUIRED`, `tier=REVIEW_REQUIRED`), zero automated dispatch.
+- **High Confidence ($\ge 0.65$) + Multi-bus ($\ge 2$):** Trigger `DISPATCHABLE_TASK` (`tier=ACTIONABLE_WORK_ORDER`), auto-dispatch permitted for draft municipal work orders.
+- **High Confidence ($\ge 0.65$) + Single bus ($< 2$):** Retained in `INTERNAL_MONITORING` (`tier=AWAITING_FLEET_CORROBORATION`).
+- **Moderate Confidence ($0.40 - 0.65$):** Trigger `SUPERVISOR_REVIEW_CANDIDATE` (`tier=REVIEW_REQUIRED`), manual review required.
+- **Low Confidence ($< 0.40$):** Retain in `INTERNAL_MONITORING` (`tier=LOG_AND_GROUP`).
 - **False Dispatch Rate:** $0.0\%$ across all tested automated runs.
 
 ---
 
 ## 15. Privacy & License-Plate Blurring Integrity
 
-In accordance with municipal privacy requirements (DPDP Act compliance):
-- All vehicle bounding boxes undergo Gaussian blur filtering on detection.
-- Facial and license plate regions in FOV are masked before issue snapshot persistence.
-- Zero raw unblurred frames are written to persistent municipal exports.
+In accordance with privacy-by-design prototype safeguards:
+- Detected person head/face bounding box upper regions undergo Gaussian blur filtering before issue snapshot persistence.
+- License plate blurring remains inactive pending dedicated ANPR hardware/model integration (`_PLATE_BLUR_CLASSES = set()`).
+- Zero unmasked evidence snapshots with identifiable human faces are written to persistent municipal exports.
 
 ---
 
@@ -270,11 +272,11 @@ The incident subsystem monitors anomalous spatio-temporal co-occurrences:
 ## 19. Real Performance & Latency Metrics
 
 Evaluated on user edge environment (NVIDIA GeForce RTX 5050 Laptop GPU / AMD Ryzen CPU):
-- **Road Damage Detection Latency:** $\approx 14.2\text{ ms}$ / frame (PyTorch CUDA FP16)
-- **Traffic Detection & Tracking Latency:** $\approx 16.8\text{ ms}$ / frame
-- **City Memory & Fusion Latency:** $< 1.2\text{ ms}$ / observation
-- **Total Pipeline Throughput:** $> 45\text{ FPS}$ sustained on GPU
-- **Real-Time Feasibility:** Easily processes standard $25\text{ FPS}$ fleet dashcam feeds with $> 40\%$ compute headroom for background logging and GIS serialization.
+- **Raw Road Damage Model Latency:** $\approx 20.13 - 31.83\text{ ms}$ / frame (PyTorch CUDA FP16, raw model execution $\approx 31.4 - 49.7\text{ FPS}$)
+- **Tracking & Observation Overhead:** $\approx 4.5 - 6.2\text{ ms}$ / frame
+- **City Memory & Cross-Domain Fusion Latency:** $< 1.5\text{ ms}$ / observation
+- **Full End-to-End Pipeline Throughput:** **3.1 – 8.5 FPS** (including video decode, quality gate, dual-model inference, tracking, spatial filtering, on-screen rendering, and H.264 disk encoding)
+- **Fleet Ingestion Feasibility:** Full pipeline comfortably exceeds the 3.0 FPS dashcam capture target (with dynamic burst trigger to 10 FPS for incident scenarios). Raw tensor forward-pass exceeds 30 FPS, but full end-to-end processing with disk writes is measured at 3.1–8.5 FPS.
 
 ---
 
@@ -291,7 +293,7 @@ All verification artifacts are preserved in the repository:
 ## 21. Limitations, Honest Negative Findings & Known Gaps
 
 To maintain complete scientific and engineering honesty before SIH judges:
-1. **Model Weights Retained:** We did not retrain YOLOv8 from scratch. Fine-tuning on 400 frames would induce severe overfitting. Current performance is achieved through principled threshold and filter calibration.
+1. **Model Weights Retained:** We did not retrain YOLO12s from scratch. Fine-tuning on 400 frames would induce severe overfitting. Current performance is achieved through principled threshold and filter calibration.
 2. **Speed & Metric Estimation:** Vehicle speeds are derived from pixel displacement and homography assumptions; without certified radar/LiDAR or calibrated survey targets, speed is classified qualitatively (e.g., congested vs. free-flowing).
 3. **Pothole Depth:** Monocular dashcam video provides 2D surface bounding geometry. True volumetric depth ($> 5\text{ cm}$) is estimated via shadow/water heuristics, not direct 3D point clouds.
 4. **Follow-Up Proof-of-Closure:** Municipal repair verification workflows are modeled and simulated through deterministic API contracts; closed-loop physical road repair verification requires actual secondary fleet passes over re-paved asphalt.

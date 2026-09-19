@@ -20,22 +20,22 @@ This document concludes the **Final Accuracy + Reliability Optimization Pass** f
 
 | Phase | Domain | Status & Measured Result | Action Taken |
 
-‰©--------------------------------------------------------------------------------------------------------|
+ï¿½ï¿½--------------------------------------------------------------------------------------------------------|
 || Phase 1 | Real Model Accuracy | Validated D00, D10, D20, D40 on real road footage | Confidence thresholds locked (0.25 inference, 0.40 reporting) |
 || Phase 2 | False Positive Reduction | Floor grout generated false cracks due to domain shift | Enforced temporal corroboration (min_detections=3) & road ROI |
 || Phase 3 | Vehicle Counting | Observation-proxy caused double counting | Hardened 2>line-crossing with persistent counted_track_ids set |
-zx± Phase 4 | Traffic Density & Congestion | Spatial-temporal velocity clustering | Multi-tier binning (<10 km/h = SEVERE) |
-|| Phase 5 | Tracking & ID  Switch | Track fragmentation during passing | ByteTrack IoU max coasting gap 15 frames |
+zxï¿½ Phase 4 | Traffic Density & Congestion | Spatial-temporal velocity clustering | Multi-tier binning (<10 km/h = SEVERE) |
+|| Phase 5 | Tracking & ID  Switch | Track fragmentation during passing | UrbianTracker IoU max coasting gap 15 frames |
 || Phase 6 | GPS Precision & Boundary | Out-of-bounds timestamps caused extrapolation | **FIXED:** Clamped alpha [0, 1]; gaps >10s yield UNAVAILABLE |
-zx± Phase 7 | Multi-Bus Corroboration | Single bus noise could escalate priority | Required >= 2 buses for verified status; single bus capped |
-zx± Phase 8 | Road Health Index (PCI) | Extreme defect loads could breach bounds | Hardened IRC:SP:20 deduction curve, strictly clamped [0, 100] |
-zx± Phase 9 | Cross-Domain Fusion | Congestion alone must not trigger compound road hazard | Strict isolation verified: pure traffic yields STANDARD_MONITORING |
-zx± Phase 10 | Priority Engine V2 | Extreme volumes could breach max score | Mathematically clamped to [0.0, 100.0] with full breakdown |
-zx± Phase 11 | Repair Verification & Closure | Follow-up bus re-inspection misalignment | Structural closure verification lifecycle documented (simulated) |
+zxï¿½ Phase 7 | Multi-Bus Corroboration | Single bus noise could escalate priority | Required >= 2 buses for verified status; single bus capped |
+zxï¿½ Phase 8 | Road Health Index (PCI) | Extreme defect loads could breach bounds | Hardened IRC:SP:20 deduction curve, strictly clamped [0, 100] |
+zxï¿½ Phase 9 | Cross-Domain Fusion | Congestion alone must not trigger compound road hazard | Strict isolation verified: pure traffic yields STANDARD_MONITORING |
+zxï¿½ Phase 10 | Priority Engine V2 | Extreme volumes could breach max score | Mathematically clamped to [0.0, 100.0] with full breakdown |
+zxï¿½ Phase 11 | Repair Verification & Closure | Follow-up bus re-inspection misalignment | Structural closure verification lifecycle documented (simulated) |
 || Phase 12 | Command Center & GIS | GeoJSON coordinate order violations | Strict GEOJSON RFC 7946 [lon, lat] compliance verified |
 || Phase 13 | Determinism & Reproducibility | Across runs, filters must not flicker | 100% deterministic execution on identical inputs |
-zx± Phase 14 | Edge Runtime Profiling | YOLO12s raw latency: 20.13ms (1080) / 13.38ms (848p) | End-to-end pipeline 3.1-8.5 FPS (exceeds 3.0 FPS dashcam target) |
-zx± Phase 15 | Failure Injection | Boundary stress unexercised by golden paths | **ADDED:** 8 dedicated failure-injection tests |
+zxï¿½ Phase 14 | Edge Runtime Profiling | YOLO12s raw latency: 20.13ms (1080) / 13.38ms (848p) | End-to-end pipeline 3.1-8.5 FPS (exceeds 3.0 FPS dashcam target) |
+zxï¿½ Phase 15 | Failure Injection | Boundary stress unexercised by golden paths | **ADDED:** 8 dedicated failure-injection tests |
 || Phase 16 | End-to-End Hardening | Full integration demo runs | Zero crashes, zero memory leaks |
 || Phase 17 | Honest Disclosure | UNIMPLEMENTED features (ANPR, radar speed, etc.) | Formally disclosed and justified |
 || Phase 18 | Final Audit Reporting | Matrix and audit documentation sync | Completed and verified |
@@ -65,13 +65,13 @@ A.what is truly running through real AI models vs heuristics/simulation?
 - **Real AI Models (NVIDIA GPU, PyTorch 2.6.0+cu132):**
   1. Road damage perception: yolo12s-rdd2022.pt (D00, D10, D20, D40 detection on real road mp4s).
   2. Traffic vehicle perception: yolo11n.pt (car, bus, truck, motorcycle on real road mp4s).
--&ª*Heuristics:** Temporal flicker gating, 2>line crossing counter, spatial velocity congestion heatmaps, IRC:SP:20 road health indices, Priority Engine V2 scoring, and cross-domain synergy multipliers.
+-&ï¿½*Heuristics:** Temporal flicker gating, 2>line crossing counter, spatial velocity congestion heatmaps, IRC:SP:20 road health indices, Priority Engine V2 scoring, and cross-domain synergy multipliers.
 - **Simulated:** Automated municipal work-order ERP dispatch mock, second-bus post-repair re-inspection, and waterlogging depth sensor proxy.
 
 B. What are the measured failure modes and their mitigation mechanisms?
 - **Floor grout/surface shadow domain shift:** Mitigated via temporal grouping (min_detections>=3) and carriageway ROI gating.
 - **GPS dropout and urban canyons:** GPSAssociator rejects gaps > 10s, returning UNAVAILABLE with 9999m uncertainty to prevent geo-badging.
-- **Vehicle occlusion and ID switches:** ByteTrack 15-frame coasting and persistent counted_track_ids set guarantees zero double-counting.
+- **Vehicle occlusion and ID switches:** UrbianTracker 15-frame coasting and persistent counted_track_ids set guarantees zero double-counting.
 - **False compound hazards: Cross-domain fusion isolates pure traffic congestion from infrastructure alarms unless a confirmed defect is present.
 
 C. Why are the 5 unimplemented requirements omitted, and how can they be built?
