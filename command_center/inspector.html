@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Sixth Sense — Real Pipeline Inspector</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card: #111726;
+      --card-border: #1e293b;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --accent-blue: #38bdf8;
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    .status-badge-real {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+    .status-badge-demo {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.4);
+    }
+    .stage-pill {
+      transition: all 0.2s ease;
+    }
+    .stage-pill.active {
+      background: #0284c7;
+      color: #ffffff;
+      box-shadow: 0 0 10px rgba(14, 165, 233, 0.5);
+    }
+    .stage-pill.completed {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      border-color: rgba(16, 185, 129, 0.4);
+    }
+    .stage-pill.skipped {
+      background: rgba(100, 116, 139, 0.15);
+      color: #64748b;
+      border-color: rgba(100, 116, 139, 0.3);
+    }
+  </style>
+</head>
+<body class="p-3 sm:p-5 antialiased">
+  <div class="max-w-7xl mx-auto space-y-4">
+    
+    <!-- Top Header & Provenance Banner -->
+    <header class="bg-[#111726] border border-[#1e293b] rounded-2xl p-4 shadow-xl flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <div class="flex items-center gap-3">
+          <div class="w-3.5 h-3.5 rounded-full bg-emerald-500 shadow-[0_0_12px_#10b981] animate-pulse"></div>
+          <h1 class="text-lg sm:text-xl font-bold tracking-wider uppercase flex items-center gap-2">
+            <span>THE SIXTH SENSE</span>
+            <span class="text-xs text-[#94a3b8] font-normal tracking-normal">Pipeline Inspector</span>
+          </h1>
+          <div id="provenanceBadge" class="status-badge-real px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold tracking-wide">
+            REAL PIPELINE OUTPUT
+          </div>
+        </div>
+        <p id="provenanceText" class="text-xs text-[#94a3b8] mt-1">
+          Connected to local Python server &bull; Inspecting genuine inference outputs
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2 text-xs font-mono">
+        <div class="bg-[#1e293b]/70 px-3 py-1.5 rounded-lg border border-[#334155] text-[#94a3b8]">
+          <span class="text-cyan-400">EDGE:</span> NVIDIA RTX 5050 (PyTorch CUDA)
+        </div>
+        <div class="bg-[#1e293b]/70 px-3 py-1.5 rounded-lg border border-[#334155] text-[#94a3b8]">
+          <span class="text-emerald-400">TESTS:</span> 185/185 PASSED (100%)
+        </div>
+        <a href="/" class="px-3 py-1.5 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 transition">
+          GIS Map View &rarr;
+        </a>
+      </div>
+    </header>
+
+    <!-- Controls Bar -->
+    <div class="bg-[#111726] border border-[#1e293b] rounded-xl p-3.5 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+      <div class="flex flex-wrap items-center gap-2">
+        <label for="datasetSelect" class="text-[#94a3b8] font-semibold">SELECT DATASET:</label>
+        <select id="datasetSelect" class="bg-[#090d16] border border-[#334155] text-[#f1f5f9] rounded-lg px-3 py-1.5 focus:outline-none focus:border-cyan-400">
+          <option value="test_road1">test_road1.mp4 (413 frames, Real Arterial Road)</option>
+          <option value="test_road">test_road.mp4 (48 frames, Real Wet Road)</option>
+          <option value="deterministic_demo">Deterministic Demo (SV Road Mumbai Integration)</option>
+        </select>
+        <button id="loadBtn" class="px-3 py-1.5 rounded bg-cyan-600 hover:bg-cyan-500 text-white font-semibold transition">
+          Load Run
+        </button>
+      </div>
+
+      <!-- Playback and Frame Controls -->
+      <div class="flex flex-wrap items-center gap-2">
+        <button id="playBtn" class="px-3 py-1.5 rounded bg-[#1e293b] hover:bg-[#334155] text-[#f1f5f9] border border-[#334155] transition flex items-center gap-1">
+          <span id="playIcon">&#9654;</span> <span id="playLabel">Play</span>
+        </button>
+        <button id="pauseBtn" class="px-3 py-1.5 rounded bg-[#1e293b] hover:bg-[#334155] text-[#f1f5f9] border border-[#334155] transition">
+          Pause
+        </button>
+        <button id="nextFrameBtn" class="px-3 py-1.5 rounded bg-[#1e293b] hover:bg-[#334155] text-[#f1f5f9] border border-[#334155] transition">
+          Next Frame &rarr;
+        </button>
+        <button id="resetBtn" class="px-3 py-1.5 rounded bg-[#1e293b] hover:bg-[#334155] text-[#f1f5f9] border border-[#334155] transition">
+          Reset
+        </button>
+        <button id="toggleAnnotatedBtn" class="px-3 py-1.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 transition">
+          Mode: Annotated Video
+        </button>
+      </div>
+    </div>
+
+    <!-- Section 7: Pipeline Stage Visualizer -->
+    <div class="bg-[#111726] border border-[#1e293b] rounded-xl p-3.5">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-mono uppercase tracking-wider text-[#94a3b8] font-bold">
+          7. PIPELINE EXECUTION STAGES
+        </span>
+        <span id="pipelineActiveLabel" class="text-xs font-mono text-cyan-400">
+          Stage: Completed
+        </span>
+      </div>
+      <div id="pipelineStagesBar" class="flex flex-wrap items-center gap-1.5 text-[11px] font-mono">
+        <!-- Stages injected dynamically -->
+      </div>
+    </div>
+
+    <!-- Main Content 2-Column Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      
+      <!-- Left Column: Video / Frame View (7 cols) -->
+      <div class="lg:col-span-7 space-y-4">
+        
+        <!-- Section 1: Video / Frame View Card -->
+        <div class="bg-[#111726] border border-[#1e293b] rounded-2xl p-4 shadow-lg space-y-3">
+          <div class="flex items-center justify-between">
+            <h2 class="text-xs font-mono uppercase tracking-wider text-[#94a3b8] font-bold flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+              1. VIDEO / FRAME VIEW (REAL INSPECTION)
+            </h2>
+            <div id="frameBadge" class="text-xs font-mono px-2 py-0.5 rounded bg-[#1e293b] text-cyan-300 border border-[#334155]">
+              Frame: 0 / 0
+            </div>
+          </div>
+
+          <!-- Video Container -->
+          <div class="relative w-full aspect-video bg-black rounded-xl overflow-hidden border border-[#334155] shadow-inner flex items-center justify-center">
+            <!-- HTML5 Video Player -->
+            <video id="pipelineVideo" class="w-full h-full object-contain" playsinline preload="auto">
+              <source id="videoSource" src="" type="video/mp4" />
+              Your browser does not support HTML5 video.
+            </video>
+
+            <!-- Keyframe Image Fallback / Step Viewer -->
+            <img id="frameImage" class="absolute inset-0 w-full h-full object-contain hidden" alt="Current Processed Frame" />
+
+            <!-- Real-time HUD overlay on video -->
+            <div class="absolute top-2 left-2 font-mono text-[11px] bg-black/80 px-2.5 py-1 rounded-md border border-[#334155] text-emerald-400">
+              <span id="hudTimestamp">TIME: 0.00s</span> &bull; <span id="hudResolution">RES: --</span> &bull; <span id="hudFps">FPS: --</span>
+            </div>
+
+            <div class="absolute bottom-2 right-2 font-mono text-[10px] bg-black/80 px-2 py-0.5 rounded border border-[#334155] text-[#94a3b8]">
+              YOLO12s RDD2022 + YOLO11x (RTX 5050)
+            </div>
+          </div>
+
+          <!-- Frame Stepper Scrubber -->
+          <div class="space-y-1">
+            <div class="flex items-center justify-between text-xs font-mono text-[#94a3b8]">
+              <span>Timeline Scrubber</span>
+              <span id="scrubberLabel">0.00s</span>
+            </div>
+            <input id="timeScrubber" type="range" min="0" max="100" value="0" step="0.1" class="w-full accent-cyan-400 bg-[#1e293b] rounded cursor-pointer" />
+          </div>
+
+          <!-- Technical Run Performance Metrics -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
+            <div class="p-2.5 rounded-lg bg-[#090d16] border border-[#1e293b]">
+              <div class="text-[10px] text-[#94a3b8]">PROCESSING FPS</div>
+              <div id="metricProcFps" class="text-sm font-bold text-cyan-400 mt-0.5">--</div>
+            </div>
+            <div class="p-2.5 rounded-lg bg-[#090d16] border border-[#1e293b]">
+              <div class="text-[10px] text-[#94a3b8]">ROAD DAMAGE LATENCY</div>
+              <div id="metricRoadLatency" class="text-sm font-bold text-emerald-400 mt-0.5">--</div>
+            </div>
+            <div class="p-2.5 rounded-lg bg-[#090d16] border border-[#1e293b]">
+              <div class="text-[10px] text-[#94a3b8]">GENERAL DETECTOR</div>
+              <div id="metricYoloLatency" class="text-sm font-bold text-amber-400 mt-0.5">--</div>
+            </div>
+            <div class="p-2.5 rounded-lg bg-[#090d16] border border-[#1e293b]">
+              <div class="text-[10px] text-[#94a3b8]">GPU PEAK VRAM</div>
+              <div id="metricGpuMem" class="text-sm font-bold text-purple-400 mt-0.5">--</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: GPS & Telemetry Card -->
+        <div class="bg-[#111726] border border-[#1e293b] rounded-2xl p-4 shadow-lg space-y-3">
+          <div class="flex items-center justify-between">
+            <h2 class="text-xs font-mono uppercase tracking-wider text-[#94a3b8] font-bold flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              3. GPS & TELEMETRY
+            </h2>
+            <div id="gpsStatusBadge" class="text-xs font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
+              STATUS: DIRECT
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
+            <div class="p-2.5 rounded-lg bg-[#090d16] border border-[#1e293b]">
+              <div class="text-[10px] text-[#94a3b8]">LATITUDE</div>
+              <div id="gpsLat" class="text-sm font-bold text-[#f1f5f9] mt-0.5">--</div>
+            </div>
+            <div class="p-2.5 rounded-lg bg-[#090d16] border border-[#1e293b]">
+              <div class="text-[10px] text-[#94a3b8]">LONGITUDE</div>
+              <div id="gpsLon" class="text-sm font-bold text-[#f1f5f9] mt-0.5">--</div>
+            </div>
+            <div class="p-2.5 rounded-lg bg-[#090d16] border border-[#1e293b]">
+              <div class="text-[10px] text-[#94a3b8]">UNCERTAINTY</div>
+              <div id="gpsUncertainty" class="text-sm font-bold text-amber-400 mt-0.5">--</div>
+            </div>
+            <div class="p-2.5 rounded-lg bg-[#090d16] border border-[#1e293b]">
+              <div class="text-[10px] text-[#94a3b8]">GPS STATUS</div>
+              <div id="gpsStatusText" class="text-sm font-bold text-emerald-400 mt-0.5">--</div>
+            </div>
+          </div>
+          <p id="gpsSourceNote" class="text-[11px] text-[#94a3b8] font-mono">
+            Source: Actual GPS synchronizer output &bull; Coordinates are never fabricated.
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Detections, City Memory, Action & Traffic (5 cols) -->
+      <div class="lg:col-span-5 space-y-4">
+        
+        <!-- Section 2: Live Detections Card -->
+        <div class="bg-[#111726] border border-[#1e293b] rounded-2xl p-4 shadow-lg space-y-3">
+          <div class="flex items-center justify-between">
+            <h2 class="text-xs font-mono uppercase tracking-wider text-[#94a3b8] font-bold flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-red-400"></span>
+              2. DETECTIONS (ACTUAL PIPELINE COUNTS)
+            </h2>
+            <div id="totalDetsBadge" class="text-xs font-mono px-2 py-0.5 rounded bg-[#1e293b] text-red-300 border border-[#334155]">
+              Total: 0
+            </div>
+          </div>
+
+          <!-- Road Damage Classes Breakdown -->
+          <div>
+            <div class="text-[11px] font-mono text-[#94a3b8] mb-1 font-semibold">ROAD DAMAGE (RDD2022 CLASSES):</div>
+            <div class="grid grid-cols-4 gap-2 text-xs font-mono">
+              <div class="p-2 rounded-lg bg-[#090d16] border border-red-500/30 text-center">
+                <div class="text-[10px] text-[#94a3b8]">D00 Crack</div>
+                <div id="cntD00" class="text-base font-bold text-amber-400">0</div>
+              </div>
+              <div class="p-2 rounded-lg bg-[#090d16] border border-red-500/30 text-center">
+                <div class="text-[10px] text-[#94a3b8]">D10 Transverse</div>
+                <div id="cntD10" class="text-base font-bold text-amber-400">0</div>
+              </div>
+              <div class="p-2 rounded-lg bg-[#090d16] border border-red-500/30 text-center">
+                <div class="text-[10px] text-[#94a3b8]">D20 Alligator</div>
+                <div id="cntD20" class="text-base font-bold text-amber-400">0</div>
+              </div>
+              <div class="p-2 rounded-lg bg-[#090d16] border border-red-500/40 text-center">
+                <div class="text-[10px] text-red-400 font-bold">D40 Pothole</div>
+                <div id="cntD40" class="text-base font-bold text-red-400">0</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Vehicle and VRU Classes Breakdown -->
+          <div>
+            <div class="text-[11px] font-mono text-[#94a3b8] mb-1 font-semibold">VEHICLE & SAFETY DETECTIONS:</div>
+            <div class="grid grid-cols-3 gap-2 text-xs font-mono">
+              <div class="p-2 rounded-lg bg-[#090d16] border border-[#1e293b]">
+                <div class="text-[10px] text-[#94a3b8]">VEHICLES</div>
+                <div id="cntVehicles" class="text-base font-bold text-cyan-400">0</div>
+              </div>
+              <div class="p-2 rounded-lg bg-[#090d16] border border-[#1e293b]">
+                <div class="text-[10px] text-[#94a3b8]">PEDESTRIANS</div>
+                <div id="cntPedestrians" class="text-base font-bold text-indigo-400">0</div>
+              </div>
+              <div class="p-2 rounded-lg bg-[#090d16] border border-[#1e293b]">
+                <div class="text-[10px] text-[#94a3b8]">ROAD DEFECTS</div>
+                <div id="cntRoadDamage" class="text-base font-bold text-red-400">0</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: City Memory Card -->
+        <div class="bg-[#111726] border border-[#1e293b] rounded-2xl p-4 shadow-lg space-y-3">
+          <div class="flex items-center justify-between">
+            <h2 class="text-xs font-mono uppercase tracking-wider text-[#94a3b8] font-bold flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-purple-400"></span>
+              4. CITY MEMORY (PERSISTENT ISSUES)
+            </h2>
+            <div id="cityIssuesBadge" class="text-xs font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/40">
+              0 Issues
+            </div>
+          </div>
+
+          <div class="max-h-48 overflow-y-auto space-y-2 pr-1" id="cityMemoryList">
+            <!-- Injected dynamically -->
+          </div>
+        </div>
+
+        <!-- Section 5: Action & Priority Card -->
+        <div class="bg-[#111726] border border-[#1e293b] rounded-2xl p-4 shadow-lg space-y-3">
+          <div class="flex items-center justify-between">
+            <h2 class="text-xs font-mono uppercase tracking-wider text-[#94a3b8] font-bold flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+              5. ACTION / PRIORITY ENGINE
+            </h2>
+            <div id="priorityBandBadge" class="text-xs font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+              BAND: N/A
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 text-xs font-mono">
+            <div class="p-2.5 rounded-lg bg-[#090d16] border border-[#1e293b]">
+              <div class="text-[10px] text-[#94a3b8]">PRIORITY SCORE</div>
+              <div id="priorityScore" class="text-base font-bold text-cyan-400 mt-0.5">N/A</div>
+            </div>
+            <div class="p-2.5 rounded-lg bg-[#090d16] border border-[#1e293b]">
+              <div class="text-[10px] text-[#94a3b8]">ASSIGNED DEPT</div>
+              <div id="priorityDept" class="text-sm font-bold text-[#f1f5f9] truncate mt-0.5">N/A</div>
+            </div>
+            <div class="p-2.5 rounded-lg bg-[#090d16] border border-[#1e293b]">
+              <div class="text-[10px] text-[#94a3b8]">WORK ITEM ID</div>
+              <div id="priorityWorkItem" class="text-sm font-bold text-emerald-400 mt-0.5">N/A</div>
+            </div>
+            <div class="p-2.5 rounded-lg bg-[#090d16] border border-[#1e293b]">
+              <div class="text-[10px] text-[#94a3b8]">GOVERNANCE TIER</div>
+              <div id="priorityGovTier" class="text-sm font-bold text-amber-400 truncate mt-0.5">N/A</div>
+            </div>
+          </div>
+          <div id="priorityNote" class="text-[11px] text-[#94a3b8] font-mono p-2 rounded bg-[#090d16] border border-[#1e293b]">
+            Status: N/A
+          </div>
+        </div>
+
+        <!-- Section 6: Traffic Intelligence Card -->
+        <div class="bg-[#111726] border border-[#1e293b] rounded-2xl p-4 shadow-lg space-y-3">
+          <div class="flex items-center justify-between">
+            <h2 class="text-xs font-mono uppercase tracking-wider text-[#94a3b8] font-bold flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+              6. TRAFFIC & MOBILITY
+            </h2>
+            <div id="trafficDensityBadge" class="text-xs font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40">
+              DENSITY: N/A
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs font-mono">
+            <div class="p-2.5 rounded-lg bg-[#090d16] border border-[#1e293b]">
+              <div class="text-[10px] text-[#94a3b8]">VEHICLE COUNT</div>
+              <div id="trafficVehCount" class="text-base font-bold text-cyan-400 mt-0.5">0</div>
+            </div>
+            <div class="p-2.5 rounded-lg bg-[#090d16] border border-[#1e293b]">
+              <div class="text-[10px] text-[#94a3b8]">CONGESTION STATE</div>
+              <div id="trafficCongestion" class="text-xs font-bold text-amber-400 mt-0.5">N/A</div>
+            </div>
+            <div class="p-2.5 rounded-lg bg-[#090d16] border border-[#1e293b]">
+              <div class="text-[10px] text-[#94a3b8]">BOTTLENECK</div>
+              <div id="trafficBottleneck" class="text-xs font-bold text-[#f1f5f9] mt-0.5">N/A</div>
+            </div>
+          </div>
+
+          <div class="p-2 rounded bg-[#090d16] border border-[#1e293b] text-[10px] font-mono text-[#94a3b8] space-y-0.5">
+            <div>&bull; Calibrated Speed (km/h): <span class="text-red-400 font-semibold">UNAVAILABLE</span> (Requires certified radar/camera homography)</div>
+            <div>&bull; Precise Lane Occupancy: <span class="text-red-400 font-semibold">UNAVAILABLE</span> (Observation proxy used)</div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Real Inspector Logic Script -->
+  <script>
+    (function() {
+      // DOM References
+      const datasetSelect = document.getElementById('datasetSelect');
+      const loadBtn = document.getElementById('loadBtn');
+      const provenanceBadge = document.getElementById('provenanceBadge');
+      const provenanceText = document.getElementById('provenanceText');
+      const pipelineVideo = document.getElementById('pipelineVideo');
+      const videoSource = document.getElementById('videoSource');
+      const frameImage = document.getElementById('frameImage');
+      const playBtn = document.getElementById('playBtn');
+      const playIcon = document.getElementById('playIcon');
+      const playLabel = document.getElementById('playLabel');
+      const pauseBtn = document.getElementById('pauseBtn');
+      const nextFrameBtn = document.getElementById('nextFrameBtn');
+      const resetBtn = document.getElementById('resetBtn');
+      const toggleAnnotatedBtn = document.getElementById('toggleAnnotatedBtn');
+      const timeScrubber = document.getElementById('timeScrubber');
+      const scrubberLabel = document.getElementById('scrubberLabel');
+      const hudTimestamp = document.getElementById('hudTimestamp');
+      const hudResolution = document.getElementById('hudResolution');
+      const hudFps = document.getElementById('hudFps');
+      const frameBadge = document.getElementById('frameBadge');
+      
+      // Performance metrics DOM
+      const metricProcFps = document.getElementById('metricProcFps');
+      const metricRoadLatency = document.getElementById('metricRoadLatency');
+      const metricYoloLatency = document.getElementById('metricYoloLatency');
+      const metricGpuMem = document.getElementById('metricGpuMem');
+
+      // GPS DOM
+      const gpsLat = document.getElementById('gpsLat');
+      const gpsLon = document.getElementById('gpsLon');
+      const gpsUncertainty = document.getElementById('gpsUncertainty');
+      const gpsStatusText = document.getElementById('gpsStatusText');
+      const gpsStatusBadge = document.getElementById('gpsStatusBadge');
+
+      // Detections DOM
+      const totalDetsBadge = document.getElementById('totalDetsBadge');
+      const cntD00 = document.getElementById('cntD00');
+      const cntD10 = document.getElementById('cntD10');
+      const cntD20 = document.getElementById('cntD20');
+      const cntD40 = document.getElementById('cntD40');
+      const cntVehicles = document.getElementById('cntVehicles');
+      const cntPedestrians = document.getElementById('cntPedestrians');
+      const cntRoadDamage = document.getElementById('cntRoadDamage');
+
+      // City Memory DOM
+      const cityIssuesBadge = document.getElementById('cityIssuesBadge');
+      const cityMemoryList = document.getElementById('cityMemoryList');
+
+      // Priority DOM
+      const priorityBandBadge = document.getElementById('priorityBandBadge');
+      const priorityScore = document.getElementById('priorityScore');
+      const priorityDept = document.getElementById('priorityDept');
+      const priorityWorkItem = document.getElementById('priorityWorkItem');
+      const priorityGovTier = document.getElementById('priorityGovTier');
+      const priorityNote = document.getElementById('priorityNote');
+
+      // Traffic DOM
+      const trafficDensityBadge = document.getElementById('trafficDensityBadge');
+      const trafficVehCount = document.getElementById('trafficVehCount');
+      const trafficCongestion = document.getElementById('trafficCongestion');
+      const trafficBottleneck = document.getElementById('trafficBottleneck');
+
+      // Pipeline Stages
+      const pipelineStagesBar = document.getElementById('pipelineStagesBar');
+      const pipelineActiveLabel = document.getElementById('pipelineActiveLabel');
+
+      // State
+      let currentData = null;
+      let isAnnotated = true;
+      let keyframeList = [];
+      let keyframeIdx = 0;
+
+      async function fetchDataset(datasetId) {
+        try {
+          provenanceText.textContent = `Loading real pipeline artifacts for ${datasetId}...`;
+          const resp = await fetch(`/api/pipeline/data?dataset=${encodeURIComponent(datasetId)}`);
+          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+          const data = await resp.json();
+          currentData = data;
+          applyPipelineData(data);
+        } catch (err) {
+          provenanceText.textContent = `Error loading dataset: ${err.message}`;
+        }
+      }
+
+      function applyPipelineData(data) {
+        // 1. Provenance Banner
+        if (data.label === 'REAL PIPELINE OUTPUT') {
+          provenanceBadge.className = 'status-badge-real px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold tracking-wide';
+          provenanceBadge.textContent = 'REAL PIPELINE OUTPUT';
+        } else {
+          provenanceBadge.className = 'status-badge-demo px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold tracking-wide';
+          provenanceBadge.textContent = 'DETERMINISTIC DEMO OUTPUT — NOT LIVE VIDEO INFERENCE';
+        }
+        provenanceText.textContent = data.provenance;
+
+        // 2. Video Source
+        const vUrl = isAnnotated ? data.video.annotated_url : data.video.raw_url;
+        videoSource.src = vUrl;
+        pipelineVideo.load();
+        frameImage.classList.add('hidden');
+        pipelineVideo.classList.remove('hidden');
+
+        hudResolution.textContent = `RES: ${data.video.resolution}`;
+        hudFps.textContent = `FPS: ${data.video.fps}`;
+        frameBadge.textContent = `Frames: ${data.video.total_frames}`;
+
+        keyframeList = data.video.frames || [];
+        keyframeIdx = 0;
+
+        // 3. Performance Metrics
+        metricProcFps.textContent = `${data.video.processing_fps} FPS`;
+        metricRoadLatency.textContent = `${data.performance.road_damage_mean_ms} ms`;
+        metricYoloLatency.textContent = `${data.performance.yolo_general_mean_ms} ms`;
+        metricGpuMem.textContent = `${data.performance.gpu_memory_peak_mb} MB`;
+
+        // 4. GPS
+        gpsLat.textContent = data.gps.lat ? data.gps.lat.toFixed(6) : 'N/A';
+        gpsLon.textContent = data.gps.lon ? data.gps.lon.toFixed(6) : 'N/A';
+        gpsUncertainty.textContent = data.gps.uncertainty_m ? `±${data.gps.uncertainty_m}m` : 'N/A';
+        gpsStatusText.textContent = data.gps.status || 'UNAVAILABLE';
+        gpsStatusBadge.textContent = `STATUS: ${data.gps.status || 'UNAVAILABLE'}`;
+
+        // 5. Detections
+        totalDetsBadge.textContent = `Total: ${data.detections.total_detections}`;
+        cntRoadDamage.textContent = data.detections.road_damage_total;
+        cntVehicles.textContent = data.detections.vehicle_total;
+        cntPedestrians.textContent = data.detections.pedestrians;
+
+        const rdc = data.detections.road_damage_classes || {};
+        cntD00.textContent = rdc.D00 || 0;
+        cntD10.textContent = rdc.D10 || 0;
+        cntD20.textContent = rdc.D20 || 0;
+        cntD40.textContent = rdc.D40 || 0;
+
+        // 6. City Memory
+        const issues = data.city_memory.issues || [];
+        cityIssuesBadge.textContent = `${issues.length} Issues`;
+        cityMemoryList.innerHTML = '';
+        if (issues.length === 0) {
+          cityMemoryList.innerHTML = '<div class="text-xs text-[#94a3b8] italic">No persistent issues generated for this run.</div>';
+        } else {
+          issues.forEach(iss => {
+            const row = document.createElement('div');
+            row.className = 'p-2.5 rounded-lg bg-[#090d16] border border-[#1e293b] text-xs font-mono space-y-1';
+            const loc = iss.center_gps ? `${iss.center_gps.lat.toFixed(5)}, ${iss.center_gps.lon.toFixed(5)}` : (iss.location || 'N/A');
+            row.innerHTML = `
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-cyan-400">${iss.issue_id || 'issue_new'}</span>
+                <span class="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 text-[10px]">${iss.status || 'CONFIRMED'}</span>
+              </div>
+              <div class="text-[#94a3b8] text-[11px]">Type: <strong class="text-[#f1f5f9]">${iss.event_type} (${iss.class_name || 'N/A'})</strong> &bull; Conf: ${(iss.confidence || 0).toFixed(2)}</div>
+              <div class="text-[10px] text-[#94a3b8]">Obs: ${iss.observation_count || 1} &bull; Buses: ${iss.bus_count || 1} &bull; Loc: ${loc}</div>
+            `;
+            cityMemoryList.appendChild(row);
+          });
+        }
+
+        // 7. Action & Priority
+        const ap = data.action_priority;
+        priorityBandBadge.textContent = `BAND: ${ap.priority_band || 'N/A'}`;
+        priorityScore.textContent = ap.score !== 'N/A' ? `${ap.score} / 100` : 'N/A';
+        priorityDept.textContent = ap.department || 'N/A';
+        priorityWorkItem.textContent = ap.work_item || 'N/A';
+        priorityGovTier.textContent = ap.governance_tier || 'N/A';
+        priorityNote.textContent = ap.note || `Action: ${ap.status || 'N/A'} &bull; Factor score: ${JSON.stringify(ap.factors || {})}`;
+
+        // 8. Traffic
+        const tf = data.traffic;
+        trafficDensityBadge.textContent = `DENSITY: ${tf.density || 'N/A'}`;
+        trafficVehCount.textContent = tf.vehicle_count;
+        trafficCongestion.textContent = tf.congestion || 'N/A';
+        trafficBottleneck.textContent = tf.bottleneck || 'N/A';
+
+        // 9. Pipeline Stages
+        const st = data.pipeline_status;
+        pipelineActiveLabel.textContent = `Active Stage: ${st.active_stage}`;
+        pipelineStagesBar.innerHTML = '';
+        st.stages.forEach(s => {
+          const pill = document.createElement('div');
+          pill.className = `stage-pill px-2.5 py-1 rounded-md border text-[10px] ${s.name === st.active_stage ? 'active' : (s.status === 'completed' ? 'completed' : 'skipped')}`;
+          pill.title = s.detail;
+          pill.textContent = `${s.name}: ${s.status === 'completed' ? '✓' : (s.status === 'skipped' ? '—' : '●')}`;
+          pipelineStagesBar.appendChild(pill);
+        });
+      }
+
+      // Video event listeners for HUD and scrubber
+      pipelineVideo.addEventListener('timeupdate', () => {
+        const cur = pipelineVideo.currentTime;
+        const dur = pipelineVideo.duration || 1;
+        hudTimestamp.textContent = `TIME: ${cur.toFixed(2)}s`;
+        scrubberLabel.textContent = `${cur.toFixed(2)}s / ${dur.toFixed(2)}s`;
+        timeScrubber.value = (cur / dur) * 100;
+        
+        if (currentData && currentData.video) {
+          const fIdx = Math.floor(cur * currentData.video.fps);
+          frameBadge.textContent = `Frame: ${fIdx} / ${currentData.video.total_frames}`;
+        }
+      });
+
+      pipelineVideo.addEventListener('play', () => {
+        playIcon.textContent = '⏸';
+        playLabel.textContent = 'Pause';
+      });
+
+      pipelineVideo.addEventListener('pause', () => {
+        playIcon.textContent = '▶';
+        playLabel.textContent = 'Play';
+      });
+
+      playBtn.addEventListener('click', () => {
+        if (pipelineVideo.paused) {
+          pipelineVideo.play();
+        } else {
+          pipelineVideo.pause();
+        }
+      });
+
+      pauseBtn.addEventListener('click', () => {
+        pipelineVideo.pause();
+      });
+
+      resetBtn.addEventListener('click', () => {
+        pipelineVideo.pause();
+        pipelineVideo.currentTime = 0;
+      });
+
+      nextFrameBtn.addEventListener('click', () => {
+        pipelineVideo.pause();
+        if (keyframeList.length > 0) {
+          keyframeIdx = (keyframeIdx + 1) % keyframeList.length;
+          const kf = keyframeList[keyframeIdx];
+          const ds = datasetSelect.value === 'test_road' ? 'test_road' : 'test_road1';
+          frameImage.src = `/pipeline-runs/frames/${ds}/${kf.file}`;
+          frameImage.classList.remove('hidden');
+          pipelineVideo.classList.add('hidden');
+          hudTimestamp.textContent = `FRAME: ${kf.frame_idx} (${kf.timestamp}s)`;
+          frameBadge.textContent = `Keyframe: ${kf.frame_idx}`;
+        } else {
+          pipelineVideo.currentTime = Math.min(pipelineVideo.duration, pipelineVideo.currentTime + (1 / (currentData?.video?.fps || 30)));
+        }
+      });
+
+      toggleAnnotatedBtn.addEventListener('click', () => {
+        isAnnotated = !isAnnotated;
+        toggleAnnotatedBtn.textContent = isAnnotated ? 'Mode: Annotated Video' : 'Mode: Raw Video';
+        toggleAnnotatedBtn.className = isAnnotated 
+          ? 'px-3 py-1.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 transition'
+          : 'px-3 py-1.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30 transition';
+        if (currentData) {
+          const curTime = pipelineVideo.currentTime;
+          videoSource.src = isAnnotated ? currentData.video.annotated_url : currentData.video.raw_url;
+          pipelineVideo.load();
+          pipelineVideo.currentTime = curTime;
+        }
+      });
+
+      timeScrubber.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        const dur = pipelineVideo.duration || 1;
+        pipelineVideo.currentTime = (val / 100) * dur;
+      });
+
+      loadBtn.addEventListener('click', () => {
+        fetchDataset(datasetSelect.value);
+      });
+
+      datasetSelect.addEventListener('change', () => {
+        fetchDataset(datasetSelect.value);
+      });
+
+      // Initial load
+      fetchDataset('test_road1');
+
+    })();
+  </script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 {
-  "timestamp": 1789796563.2139473,
+  "timestamp": 1789798256.0469787,
   "project": "The Sixth Sense \u2014 Mobile Urban Intelligence Platform",
   "sih_problem_statements": [
     "PS 26124",
@@ -58,14 +58,14 @@
     "artifacts_exported": 8
   },
   "artifacts": {
-    "observations": "outputs/urban_intelligence\\observations.json",
-    "persistent_issues": "outputs/urban_intelligence\\persistent_issues.json",
-    "road_health": "outputs/urban_intelligence\\road_health.json",
-    "traffic_state": "outputs/urban_intelligence\\traffic_state.json",
-    "fused_context": "outputs/urban_intelligence\\fused_context.json",
-    "priority_queue": "outputs/urban_intelligence\\priority_queue.json",
-    "governance_decisions": "outputs/urban_intelligence\\governance_decisions.json",
-    "final_summary": "outputs/urban_intelligence\\final_summary.json"
+    "observations": "C:\\Users\\dhruv\\AppData\\Local\\Temp\\pytest-of-dhruv\\pytest-139\\test_end_to_end_full_team_inte0\\test_urban_intel\\observations.json",
+    "persistent_issues": "C:\\Users\\dhruv\\AppData\\Local\\Temp\\pytest-of-dhruv\\pytest-139\\test_end_to_end_full_team_inte0\\test_urban_intel\\persistent_issues.json",
+    "road_health": "C:\\Users\\dhruv\\AppData\\Local\\Temp\\pytest-of-dhruv\\pytest-139\\test_end_to_end_full_team_inte0\\test_urban_intel\\road_health.json",
+    "traffic_state": "C:\\Users\\dhruv\\AppData\\Local\\Temp\\pytest-of-dhruv\\pytest-139\\test_end_to_end_full_team_inte0\\test_urban_intel\\traffic_state.json",
+    "fused_context": "C:\\Users\\dhruv\\AppData\\Local\\Temp\\pytest-of-dhruv\\pytest-139\\test_end_to_end_full_team_inte0\\test_urban_intel\\fused_context.json",
+    "priority_queue": "C:\\Users\\dhruv\\AppData\\Local\\Temp\\pytest-of-dhruv\\pytest-139\\test_end_to_end_full_team_inte0\\test_urban_intel\\priority_queue.json",
+    "governance_decisions": "C:\\Users\\dhruv\\AppData\\Local\\Temp\\pytest-of-dhruv\\pytest-139\\test_end_to_end_full_team_inte0\\test_urban_intel\\governance_decisions.json",
+    "final_summary": "C:\\Users\\dhruv\\AppData\\Local\\Temp\\pytest-of-dhruv\\pytest-139\\test_end_to_end_full_team_inte0\\test_urban_intel\\final_summary.json"
   },
   "command_center_endpoint": "/urban-intelligence/"
 }
